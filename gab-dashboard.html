@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAB OS — Business Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#080810;--bg2:#0d0d18;--surface:#111120;--surface2:#191928;--surface3:#20203a;
+  --border:#ffffff0d;--border2:#ffffff18;--text:#f0f0fa;--text2:#8080a8;--text3:#40405a;
+  --accent:#6e57ff;--accent2:#ff4f7b;--accent3:#00f5c4;--gold:#ffd166;
+  --red:#ff4f4f;--green:#00f5a0;--blue:#4fc3ff;
+  --radius:16px;--radius-sm:10px;--shadow:0 0 40px rgba(110,87,255,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Syne',sans-serif}
+.mono{font-family:'DM Mono',monospace}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 16px;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:-1px;margin-bottom:32px;padding:0 6px}
+.sidebar-logo span{color:var(--accent)}
+.sidebar-logo small{display:block;font-size:.6rem;font-weight:400;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.nav-group{margin-bottom:22px}
+.nav-group-label{font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:.85rem;font-weight:500;color:var(--text2);transition:all .18s;margin-bottom:2px;border:1px solid transparent;user-select:none}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--text);background:var(--surface2);border-color:var(--border2)}
+.nav-item .ni{font-size:1rem;width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border)}
+.goal-block{background:linear-gradient(135deg,var(--accent)22,var(--accent2)11);border:1px solid var(--accent)33;border-radius:var(--radius-sm);padding:12px}
+.goal-label{font-size:.65rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.goal-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent3)}
+.goal-sub{font-size:.7rem;color:var(--text2);margin-top:2px}
+.goal-bar-bg{height:4px;background:var(--surface3);border-radius:4px;margin-top:8px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width .6s ease}
+
+/* MAIN */
+.main{margin-left:220px;flex:1;padding:28px 32px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.topbar-left h2{font-size:1.5rem;font-weight:800;letter-spacing:-.5px}
+.topbar-left .sub{font-size:.82rem;color:var(--text2);margin-top:2px}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.date-chip{background:var(--surface);border:1px solid var(--border2);border-radius:999px;padding:7px 16px;font-size:.8rem;color:var(--text2);font-family:'DM Mono',monospace}
+.btn{padding:8px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;transition:all .18s}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{background:#5a45e8;transform:translateY(-1px)}
+.btn-ghost{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--accent)}
+.btn-sm{padding:6px 12px;font-size:.75rem}
+
+/* VIEWS */
+.view{display:none}
+.view.active{display:block;animation:fadeUp .22s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* GRIDS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.col-span-2{grid-column:span 2}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+
+/* KPI */
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;transition:all .2s}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent))}
+.kpi-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.kpi-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:8px}
+.kpi-value{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;letter-spacing:-1px}
+.kpi-sub{font-size:.72rem;color:var(--text2);margin-top:4px}
+
+/* SECTION TITLE */
+.section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+
+/* INPUT */
+.inp{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;width:100%}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.inp-row{display:flex;gap:8px;margin-bottom:10px}
+.inp-label{font-size:.72rem;color:var(--text2);margin-bottom:5px;font-weight:600;letter-spacing:.5px}
+.inp-group{margin-bottom:12px}
+select.inp{cursor:pointer}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 10px;font-size:.72rem;font-weight:700}
+.tag-purple{background:var(--accent)22;border:1px solid var(--accent)44;color:var(--accent)}
+.tag-green{background:var(--green)22;border:1px solid var(--green)44;color:var(--green)}
+.tag-red{background:var(--red)22;border:1px solid var(--red)44;color:var(--red)}
+.tag-gold{background:var(--gold)22;border:1px solid var(--gold)44;color:var(--gold)}
+.tag-blue{background:var(--blue)22;border:1px solid var(--blue)44;color:var(--blue)}
+
+/* PROGRESS */
+.prog-bg{height:6px;background:var(--surface3);border-radius:6px;overflow:hidden;margin-top:6px}
+.prog-fill{height:100%;border-radius:6px;transition:width .6s ease}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.data-table td{padding:12px 12px;font-size:.85rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface2)80}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 20px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;transform:scale(.96);transition:transform .25s}
+.modal-bg.open .modal{transform:scale(1)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem}
+.modal-close{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty .ei{font-size:2.5rem;margin-bottom:12px}
+.empty p{font-size:.88rem}
+
+/* ALERT */
+.alert{border-radius:var(--radius-sm);padding:12px 16px;font-size:.84rem;margin-bottom:10px;display:flex;gap:10px;align-items:flex-start}
+.alert-warn{background:var(--gold)11;border:1px solid var(--gold)33;color:var(--gold)}
+.alert-danger{background:var(--red)11;border:1px solid var(--red)33;color:var(--red)}
+.alert-success{background:var(--green)11;border:1px solid var(--green)33;color:var(--green)}
+.alert-info{background:var(--accent)11;border:1px solid var(--accent)33;color:var(--accent)}
+
+/* HAMBURGER */
+.hamburger{display:none;background:var(--surface);border:1px solid var(--border2);border-radius:8px;width:36px;height:36px;cursor:pointer;color:var(--text);font-size:1.1rem;align-items:center;justify-content:center}
+
+/* AI COACH */
+.ai-message{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;margin-bottom:12px;font-size:.88rem;line-height:1.7}
+.ai-message.user{background:var(--accent)11;border-color:var(--accent)33}
+.ai-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.ai-label.coach{color:var(--accent3)}
+.ai-label.user{color:var(--text2)}
+.typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin:0 2px;animation:blink 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.sidebar-overlay.show{display:block}
+
+/* MOBILE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:16px}
+  .hamburger{display:flex}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-3,.grid-2{grid-template-columns:1fr}
+  .col-span-2{grid-column:span 1}
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">GAB<span>OS</span><small>Business Dashboard</small></div>
+  <div class="nav-group">
+    <div class="nav-group-label">Core</div>
+    <div class="nav-item active" onclick="showView('command')" id="nav-command"><span class="ni">⚡</span> Command Center</div>
+    <div class="nav-item" onclick="showView('finance')" id="nav-finance"><span class="ni">💰</span> Finance Tracker</div>
+    <div class="nav-item" onclick="showView('products')" id="nav-products"><span class="ni">🧪</span> Product Lab</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Ads & Traffic</div>
+    <div class="nav-item" onclick="showView('ads')" id="nav-ads"><span class="ni">📣</span> Ads Control</div>
+    <div class="nav-item" onclick="showView('analytics')" id="nav-analytics"><span class="ni">📊</span> Analytics</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Exécution</div>
+    <div class="nav-item" onclick="showView('tasks')" id="nav-tasks"><span class="ni">✅</span> Execution Panel</div>
+    <div class="nav-item" onclick="showView('strategy')" id="nav-strategy"><span class="ni">🗺</span> Strategy Board</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Ressources</div>
+    <div class="nav-item" onclick="showView('hub')" id="nav-hub"><span class="ni">🔗</span> Hub de liens</div>
+    <div class="nav-item" onclick="showView('knowledge')" id="nav-knowledge"><span class="ni">🎓</span> Knowledge Center</div>
+    <div class="nav-item" onclick="showView('coach')" id="nav-coach"><span class="ni">🤖</span> AI Business Coach</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="goal-block">
+      <div class="goal-label">Objectif Déc. 2026</div>
+      <div class="goal-val">4 000€ / jour</div>
+      <div class="goal-sub" id="goal-days-left">— jours restants</div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- COMMAND CENTER -->
+<div class="view active" id="view-command">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="hamburger" onclick="openSidebar()">☰</button>
+        <div><h2 id="cmd-greeting">Bonjour, Gab 👋</h2><div class="sub" id="cmd-date"></div></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="date-chip" id="cmd-time"></div>
+      <button class="btn btn-primary btn-sm" onclick="showView('tasks')">+ Tâche</button>
+    </div>
+  </div>
+  <div class="grid-4" id="kpi-grid"></div>
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="card"><div class="card-title">🔔 Alertes intelligentes</div><div id="alerts-zone"></div></div>
+    <div class="card"><div class="card-title">⚡ Actions prioritaires</div><div id="priority-actions"></div></div>
+  </div>
+  <div class="grid-3">
+    <div class="card"><div class="card-title">📅 Cette semaine</div><div id="week-summary"></div></div>
+    <div class="card"><div class="card-title">🎯 Progression objectif</div><div id="goal-progress"></div></div>
+    <div class="card"><div class="card-title">🧪 Produits actifs</div><div id="products-summary"></div></div>
+  </div>
+</div>
+
+<!-- FINANCE -->
+<div class="view" id="view-finance">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>💰 Finance Tracker</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-transaction')">+ Transaction</button></div>
+  </div>
+  <div class="grid-4" id="finance-kpis"></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">
+        Transactions
+        <select class="inp" style="width:auto;padding:4px 8px;font-size:.75rem" onchange="renderFinance(this.value)">
+          <option value="month">Ce mois</option><option value="week">Cette semaine</option><option value="all">Tout</option>
+        </select>
+      </div>
+      <div id="transactions-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Répartition dépenses</div>
+      <div id="expense-breakdown"></div>
+      <div class="divider"></div>
+      <div class="card-title" style="margin-top:0">Coûts fixes</div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:.85rem"><span>Shopify Basic</span><span class="mono" style="color:var(--red)">-29$/mois</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT LAB -->
+<div class="view" id="view-products">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🧪 Product Lab</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-product')">+ Produit</button></div>
+  </div>
+  <div class="grid-4" id="product-kpis"></div>
+  <div class="card">
+    <div class="card-title">Tous les produits testés</div>
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Produit</th><th>Statut</th><th>Budget</th><th>Revenus</th><th>ROI</th><th>Score</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="products-tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="products-empty" style="display:none"><div class="ei">🧪</div><p>Aucun produit ajouté. Lance ton premier test !</p></div>
+  </div>
+</div>
+
+<!-- ADS -->
+<div class="view" id="view-ads">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>📣 Ads Control Panel</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-campaign')">+ Campagne</button></div>
+  </div>
+  <div class="grid-4" id="ads-kpis"></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Campagnes</div>
+      <div id="campaigns-list"></div>
+      <div class="empty" id="campaigns-empty"><div class="ei">📣</div><p>Aucune campagne active. Ajoute ta première quand tu relances.</p></div>
+    </div>
+    <div class="card"><div class="card-title">💡 Suggestions d'optimisation</div><div id="ads-suggestions"></div></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="view" id="view-analytics">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>📊 Analytics</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-ghost btn-sm" onclick="openModal('modal-add-metric')">+ Métrique du jour</button></div>
+  </div>
+  <div class="grid-4" id="analytics-kpis"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Tunnel de conversion</div><div id="funnel"></div></div>
+    <div class="card"><div class="card-title">Historique 7 jours</div><div id="metrics-history"></div></div>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="view" id="view-tasks">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>✅ Execution Panel</h2></div></div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="openModal('modal-template')">Templates</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-task')">+ Tâche</button>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="card"><div class="card-title">🔴 Haute priorité <span class="tag tag-red" id="count-high">0</span></div><div id="tasks-high"></div></div>
+    <div class="card"><div class="card-title">🟡 Moyenne <span class="tag tag-gold" id="count-med">0</span></div><div id="tasks-med"></div></div>
+    <div class="card"><div class="card-title">🟢 Faible / Done <span class="tag tag-green" id="count-low">0</span></div><div id="tasks-low"></div></div>
+  </div>
+</div>
+
+<!-- STRATEGY -->
+<div class="view" id="view-strategy">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🗺 Strategy Board</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-goal')">+ Objectif</button></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">🎯 Vision & Objectifs</div><div id="goals-list"></div></div>
+    <div class="card"><div class="card-title">🗓 Roadmap Mars → Déc 2026</div><div id="roadmap"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📝 Notes stratégiques</div>
+    <textarea class="inp" id="strategy-notes" rows="6" placeholder="Angles marketing, idées, observations, angles créatifs..." style="resize:vertical" oninput="saveStrategyNotes()"></textarea>
+  </div>
+</div>
+
+<!-- HUB -->
+<div class="view" id="view-hub">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🔗 Hub de liens</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-link')">+ Lien</button></div>
+  </div>
+  <div id="hub-categories"></div>
+</div>
+
+<!-- KNOWLEDGE -->
+<div class="view" id="view-knowledge">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🎓 Knowledge Center</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-resource')">+ Ressource</button></div>
+  </div>
+  <div class="grid-2">
+    <div class="card" style="border-color:var(--accent)44">
+      <div class="card-title">⚡ Formation principale <span class="tag tag-purple">Mega.nz</span></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:4px">Formation Dropshipping</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:14px">80h de contenu · Accès privé</div>
+      <div class="inp-group">
+        <div class="inp-label">Heures visionnées</div>
+        <div class="inp-row"><input class="inp" type="number" id="formation-hours" placeholder="0" min="0" max="80" oninput="updateFormationProgress()"><span style="display:flex;align-items:center;color:var(--text2);font-size:.85rem;white-space:nowrap">/ 80h</span></div>
+      </div>
+      <div class="prog-bg" style="height:8px;margin-bottom:8px"><div class="prog-fill" id="formation-bar" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--accent3))"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text2)"><span id="formation-pct">0%</span><span id="formation-remaining">80h restantes</span></div>
+      <div class="inp-group" style="margin-top:14px">
+        <div class="inp-label">Notes de la formation</div>
+        <textarea class="inp" id="formation-notes" rows="4" placeholder="Ce que tu as retenu, points clés..." oninput="saveFormationNotes()" style="resize:vertical"></textarea>
+      </div>
+      <a href="https://mega.nz/folder/FQg2lSaS#rYlByvveQyHOpaXHvHDITg" target="_blank" class="btn btn-primary" style="width:100%;text-align:center;text-decoration:none;display:block;margin-top:12px">▶ Ouvrir sur Mega.nz</a>
+    </div>
+    <div class="card">
+      <div class="card-title">📚 Autres ressources</div>
+      <div id="resources-list"></div>
+      <div class="empty" id="resources-empty"><div class="ei">📚</div><p>Ajoute des vidéos, articles, formations...</p></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">✅ Actions à appliquer depuis la formation</div>
+    <div id="formation-actions"></div>
+    <div class="inp-row" style="margin-top:12px">
+      <input class="inp" id="new-formation-action" placeholder="Action concrète à appliquer...">
+      <button class="btn btn-primary btn-sm" onclick="addFormationAction()" style="white-space:nowrap">+ Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI COACH -->
+<div class="view" id="view-coach">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🤖 AI Business Coach</h2></div></div>
+    <div class="topbar-right">
+      <select class="inp" id="coach-mode" style="width:auto;padding:6px 12px;font-size:.8rem">
+        <option value="normal">Mode Normal</option>
+        <option value="strict">Mode Strict 🔥</option>
+        <option value="soft">Mode Soft</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="clearCoach()">Effacer</button>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('modal-api-key')">🔑 API</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+    <button class="btn btn-ghost" onclick="coachQuick('analyse')" style="font-size:.8rem">📊 Analyser</button>
+    <button class="btn btn-ghost" onclick="coachQuick('today')" style="font-size:.8rem">⚡ Que faire ?</button>
+    <button class="btn btn-ghost" onclick="coachQuick('product')" style="font-size:.8rem">🧪 Valider produit</button>
+    <button class="btn btn-ghost" onclick="coachQuick('motivation')" style="font-size:.8rem">🔥 Remotiver</button>
+  </div>
+  <div class="card" style="margin-bottom:16px;min-height:300px;max-height:500px;overflow-y:auto" id="coach-box">
+    <div id="coach-messages">
+      <div class="ai-label coach">GAB OS COACH</div>
+      <div class="ai-message">Salut Gab 👋 Je suis ton AI Business Coach, 100% dédié à ton objectif : <strong>4 000€/jour en décembre 2026</strong>.<br><br>Je connais ton contexte — boutique purrlopets.com, lycéen, dropshipping. Je peux analyser tes données, te donner des actions concrètes, valider tes idées ou simplement te pousser à passer à l'action.<br><br>Configure ta clé API Anthropic (bouton 🔑 en haut) pour activer le vrai coaching IA. Qu'est-ce qu'on travaille ? 💪</div>
+    </div>
+  </div>
+  <div class="inp-row">
+    <input class="inp" id="coach-input" placeholder="Pose une question ou décris ta situation..." onkeydown="if(event.key==='Enter')sendCoach()">
+    <button class="btn btn-primary" onclick="sendCoach()">Envoyer</button>
+  </div>
+  <div style="font-size:.72rem;color:var(--text3);margin-top:6px">Nécessite une clé API Anthropic — <span style="color:var(--accent);cursor:pointer" onclick="openModal('modal-api-key')">Configurer →</span></div>
+</div>
+
+</main>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-add-transaction">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Transaction</div><button class="modal-close" onclick="closeModal('modal-add-transaction')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Type</div><select class="inp" id="t-type"><option value="revenue">Revenu 📈</option><option value="expense">Dépense 📉</option></select></div>
+    <div class="inp-group"><div class="inp-label">Description</div><input class="inp" id="t-desc" placeholder="Ex: Vente produit X"></div>
+    <div class="inp-group"><div class="inp-label">Montant (€)</div><input class="inp" type="number" id="t-amount" placeholder="0" min="0"></div>
+    <div class="inp-group"><div class="inp-label">Catégorie</div><select class="inp" id="t-cat"><option>Ventes</option><option>Publicité</option><option>Abonnements</option><option>Fournisseur</option><option>Autre</option></select></div>
+    <div class="inp-group"><div class="inp-label">Date</div><input class="inp" type="date" id="t-date"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addTransaction()">Ajouter</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-product">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="prod-modal-title">+ Nouveau produit</div><button class="modal-close" onclick="closeModal('modal-add-product')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Nom du produit</div><input class="inp" id="p-name" placeholder="Ex: Collier lumineux pour chat"></div>
+    <div class="inp-group"><div class="inp-label">Statut</div><select class="inp" id="p-status"><option value="testing">🟡 Testing</option><option value="scaling">🟢 Scaling</option><option value="paused">🔵 Pausé</option><option value="dead">🔴 Dead</option></select></div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">Budget testé (€)</div><input class="inp" type="number" id="p-budget" placeholder="0"></div>
+      <div class="inp-group"><div class="inp-label">Revenus (€)</div><input class="inp" type="number" id="p-revenue" placeholder="0"></div>
+    </div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">Score /10</div><input class="inp" type="number" id="p-score" min="0" max="10" placeholder="5"></div>
+      <div class="inp-group"><div class="inp-label">URL produit</div><input class="inp" id="p-url" placeholder="https://..."></div>
+    </div>
+    <div class="inp-group"><div class="inp-label">Notes</div><textarea class="inp" id="p-notes" rows="3" placeholder="Observations, angles testés..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveProduct()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-campaign">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Campagne pub</div><button class="modal-close" onclick="closeModal('modal-add-campaign')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Nom</div><input class="inp" id="c-name" placeholder="Ex: Meta - Collier chat - Broad"></div>
+    <div class="inp-group"><div class="inp-label">Plateforme</div><select class="inp" id="c-platform"><option>Meta Ads</option><option>TikTok Ads</option><option>Google Ads</option><option>Autre</option></select></div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">Budget/jour (€)</div><input class="inp" type="number" id="c-budget" placeholder="0"></div>
+      <div class="inp-group"><div class="inp-label">Revenus (€)</div><input class="inp" type="number" id="c-revenue" placeholder="0"></div>
+    </div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">CTR (%)</div><input class="inp" type="number" id="c-ctr" placeholder="0"></div>
+      <div class="inp-group"><div class="inp-label">CPA (€)</div><input class="inp" type="number" id="c-cpa" placeholder="0"></div>
+    </div>
+    <div class="inp-group"><div class="inp-label">Statut</div><select class="inp" id="c-status"><option value="active">🟢 Active</option><option value="paused">🟡 Pausée</option><option value="dead">🔴 Stoppée</option></select></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveCampaign()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-metric">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Métrique journalière</div><button class="modal-close" onclick="closeModal('modal-add-metric')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Date</div><input class="inp" type="date" id="m-date"></div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">Visiteurs</div><input class="inp" type="number" id="m-visitors" placeholder="0"></div>
+      <div class="inp-group"><div class="inp-label">Commandes</div><input class="inp" type="number" id="m-orders" placeholder="0"></div>
+    </div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">CA (€)</div><input class="inp" type="number" id="m-revenue" placeholder="0"></div>
+      <div class="inp-group"><div class="inp-label">Dépenses pub (€)</div><input class="inp" type="number" id="m-adspend" placeholder="0"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveMetric()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-task">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Tâche</div><button class="modal-close" onclick="closeModal('modal-add-task')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Tâche</div><input class="inp" id="task-title" placeholder="Ex: Tester nouveau créatif TikTok"></div>
+    <div class="inp-group"><div class="inp-label">Priorité</div><select class="inp" id="task-priority"><option value="high">🔴 Haute</option><option value="med">🟡 Moyenne</option><option value="low">🟢 Faible</option></select></div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">Deadline</div><input class="inp" type="date" id="task-deadline"></div>
+      <div class="inp-group"><div class="inp-label">Catégorie</div><select class="inp" id="task-cat"><option>Business</option><option>Ads</option><option>Produit</option><option>École</option><option>Autre</option></select></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addTask()">Ajouter</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-template">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">⚡ Templates de tâches</div><button class="modal-close" onclick="closeModal('modal-template')">✕</button></div>
+    <p style="font-size:.85rem;color:var(--text2);margin-bottom:16px">Clique pour ajouter toutes les tâches d'un workflow</p>
+    <div id="templates-list"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-goal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Objectif</div><button class="modal-close" onclick="closeModal('modal-add-goal')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Objectif</div><input class="inp" id="goal-title" placeholder="Ex: Atteindre 1 000€/jour"></div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">Deadline</div><input class="inp" type="date" id="goal-deadline"></div>
+      <div class="inp-group"><div class="inp-label">Horizon</div><select class="inp" id="goal-horizon"><option value="week">Semaine</option><option value="month">Mois</option><option value="quarter">Trimestre</option><option value="year">Année</option></select></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addGoal()">Ajouter</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-link">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Lien</div><button class="modal-close" onclick="closeModal('modal-add-link')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Nom</div><input class="inp" id="l-name" placeholder="Ex: Shopify Admin"></div>
+    <div class="inp-group"><div class="inp-label">URL</div><input class="inp" id="l-url" placeholder="https://..."></div>
+    <div class="grid-2">
+      <div class="inp-group"><div class="inp-label">Icône (emoji)</div><input class="inp" id="l-icon" placeholder="🛒" style="text-align:center"></div>
+      <div class="inp-group"><div class="inp-label">Catégorie</div><select class="inp" id="l-cat"><option>E-commerce</option><option>Publicité</option><option>Formation</option><option>Communication</option><option>Outils</option><option>Autre</option></select></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addLink()">Ajouter</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-add-resource">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">+ Ressource</div><button class="modal-close" onclick="closeModal('modal-add-resource')">✕</button></div>
+    <div class="inp-group"><div class="inp-label">Titre</div><input class="inp" id="r-title" placeholder="Ex: Vidéo stratégie TikTok Ads"></div>
+    <div class="inp-group"><div class="inp-label">URL</div><input class="inp" id="r-url" placeholder="https://..."></div>
+    <div class="inp-group"><div class="inp-label">Type</div><select class="inp" id="r-type"><option>Vidéo</option><option>Article</option><option>Formation</option><option>Outil</option><option>Autre</option></select></div>
+    <div class="inp-group"><div class="inp-label">Notes</div><textarea class="inp" id="r-notes" rows="3" placeholder="Ce que tu veux retenir..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addResource()">Ajouter</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-api-key">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🔑 Clé API Anthropic</div><button class="modal-close" onclick="closeModal('modal-api-key')">✕</button></div>
+    <div class="alert alert-info" style="margin-bottom:16px">Ta clé est stockée uniquement sur ton appareil. Elle n'est jamais partagée.</div>
+    <div class="inp-group"><div class="inp-label">Clé API (sk-ant-...)</div><input class="inp" type="password" id="api-key-input" placeholder="sk-ant-api03-..."></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveApiKey()">Enregistrer</button>
+    <div style="font-size:.75rem;color:var(--text2);margin-top:10px">Obtiens ta clé sur <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// STATE
+function defaultState(){return{transactions:[],products:[],campaigns:[],metrics:[],tasks:[],goals:[],links:[{id:'l1',name:'Shopify Admin',url:'https://purrlopets.myshopify.com/admin',icon:'🛒',cat:'E-commerce'},{id:'l2',name:'Mega.nz Formation',url:'https://mega.nz/folder/FQg2lSaS#rYlByvveQyHOpaXHvHDITg',icon:'🎓',cat:'Formation'},{id:'l3',name:'Meta Ads',url:'https://business.facebook.com',icon:'📘',cat:'Publicité'},{id:'l4',name:'TikTok Ads',url:'https://ads.tiktok.com',icon:'🎵',cat:'Publicité'},{id:'l5',name:'Gmail',url:'https://mail.google.com',icon:'📧',cat:'Communication'}],resources:[],formationActions:[],formationHours:0,formationNotes:'',strategyNotes:'',editingProductId:null}}
+let state;
+try{const s=JSON.parse(localStorage.getItem('gabos_v1')||'null');state=s?{...defaultState(),...s}:defaultState();}catch{state=defaultState();}
+function save(){localStorage.setItem('gabos_v1',JSON.stringify(state))}
+
+// UTILS
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}
+function daysLeft(){return Math.ceil((new Date('2026-12-01')-new Date())/(1000*60*60*24))}
+
+// NAV
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  const ni=document.getElementById('nav-'+name);if(ni)ni.classList.add('active');
+  closeSidebar();
+  if(name==='command')renderCommand();
+  if(name==='finance')renderFinance('month');
+  if(name==='products')renderProducts();
+  if(name==='ads')renderAds();
+  if(name==='analytics')renderAnalytics();
+  if(name==='tasks')renderTasks();
+  if(name==='strategy')renderStrategy();
+  if(name==='hub')renderHub();
+  if(name==='knowledge')renderKnowledge();
+}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('show')}
+
+// MODALS
+function openModal(id){document.getElementById(id).classList.add('open');document.querySelectorAll('#'+id+' input[type="date"]').forEach(i=>{if(!i.value)i.value=todayKey()})}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+// TOAST
+function toast(msg,color){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=color||'var(--accent)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+
+// COMMAND CENTER
+function renderCommand(){
+  const h=new Date().getHours();
+  document.getElementById('cmd-greeting').textContent=(h<12?'Bonjour':'Bonsoir')+', Gab 👋';
+  document.getElementById('cmd-date').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('goal-days-left').textContent=daysLeft()+' jours restants';
+  updateClock();
+  const totalRev=state.transactions.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
+  const totalExp=state.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const profit=totalRev-totalExp;
+  const todayRev=state.transactions.filter(t=>t.type==='revenue'&&t.date===todayKey()).reduce((s,t)=>s+t.amount,0);
+  const todayM=state.metrics.find(m=>m.date===todayKey())||{adspend:0,revenue:0};
+  const roas=todayM.adspend>0?(todayM.revenue/todayM.adspend).toFixed(2):'—';
+  const activeCamp=state.campaigns.filter(c=>c.status==='active').length;
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">CA Total</div><div class="kpi-value" style="color:var(--accent3)">${totalRev.toFixed(0)}€</div><div class="kpi-sub">Objectif : 4 000€/jour</div></div>
+    <div class="kpi-card" style="--kpi-color:${profit>=0?'var(--green)':'var(--red)'}"><div class="kpi-label">Profit net</div><div class="kpi-value" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}${profit.toFixed(0)}€</div><div class="kpi-sub">Dépenses : ${totalExp.toFixed(0)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">CA Aujourd'hui</div><div class="kpi-value" style="color:var(--gold)">${todayRev.toFixed(0)}€</div><div class="kpi-sub">${daysLeft()} jours avant objectif</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--blue)"><div class="kpi-label">ROAS</div><div class="kpi-value" style="color:var(--blue)">${roas}</div><div class="kpi-sub">${activeCamp} campagne(s) active(s)</div></div>
+  `;
+  const alerts=[];
+  if(profit<0)alerts.push({t:'danger',m:'⚠️ Profit négatif — dépenses > revenus'});
+  if(state.products.length===0)alerts.push({t:'warn',m:'🧪 Aucun produit — commence à tracker tes tests'});
+  if(state.tasks.filter(t=>t.priority==='high'&&!t.done).length>3)alerts.push({t:'warn',m:`🔴 ${state.tasks.filter(t=>t.priority==='high'&&!t.done).length} tâches haute priorité en attente`});
+  if(activeCamp===0)alerts.push({t:'info',m:'📣 Aucune campagne active — mode construction'});
+  if(alerts.length===0)alerts.push({t:'success',m:'✅ Tout est nominal — continue sur ta lancée !'});
+  document.getElementById('alerts-zone').innerHTML=alerts.map(a=>`<div class="alert alert-${a.t}">${a.m}</div>`).join('');
+  const highTasks=state.tasks.filter(t=>t.priority==='high'&&!t.done).slice(0,4);
+  document.getElementById('priority-actions').innerHTML=highTasks.length?highTasks.map(t=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--red)">●</span><span style="font-size:.85rem">${t.title}</span></div>`).join(''):'<div class="empty"><div class="ei">✅</div><p>Aucune tâche urgente</p></div>';
+  const days7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10)});
+  const weekRev=state.transactions.filter(t=>t.type==='revenue'&&days7.includes(t.date)).reduce((s,t)=>s+t.amount,0);
+  const weekExp=state.transactions.filter(t=>t.type==='expense'&&days7.includes(t.date)).reduce((s,t)=>s+t.amount,0);
+  document.getElementById('week-summary').innerHTML=`<div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between"><span style="font-size:.82rem;color:var(--text2)">Revenus</span><span style="font-weight:700;color:var(--accent3)">${weekRev.toFixed(0)}€</span></div><div style="display:flex;justify-content:space-between"><span style="font-size:.82rem;color:var(--text2)">Dépenses</span><span style="font-weight:700;color:var(--red)">${weekExp.toFixed(0)}€</span></div><div class="divider" style="margin:0"></div><div style="display:flex;justify-content:space-between"><span style="font-size:.82rem;font-weight:700">Profit</span><span style="font-weight:800;color:${weekRev-weekExp>=0?'var(--green)':'var(--red)'}">${(weekRev-weekExp).toFixed(0)}€</span></div></div>`;
+  const pct=Math.min(100,(todayRev/4000)*100);
+  document.getElementById('goal-bar').style.width=pct+'%';
+  document.getElementById('goal-progress').innerHTML=`<div style="text-align:center;padding:10px 0"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:2.5rem;color:var(--accent3)">${pct.toFixed(1)}%</div><div style="font-size:.82rem;color:var(--text2);margin:4px 0">de l'objectif journalier</div><div style="font-size:.78rem;color:var(--text3)">${todayRev}€ / 4 000€</div><div class="prog-bg" style="margin-top:12px"><div class="prog-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent3))"></div></div></div>`;
+  const pStats={testing:0,scaling:0,dead:0,paused:0};state.products.forEach(p=>{if(pStats[p.status]!==undefined)pStats[p.status]++});
+  document.getElementById('products-summary').innerHTML=`<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><span style="font-size:.82rem;color:var(--text2)">🟡 Testing</span><span class="tag tag-gold">${pStats.testing}</span></div><div style="display:flex;justify-content:space-between"><span style="font-size:.82rem;color:var(--text2)">🟢 Scaling</span><span class="tag tag-green">${pStats.scaling}</span></div><div style="display:flex;justify-content:space-between"><span style="font-size:.82rem;color:var(--text2)">🔴 Dead</span><span class="tag tag-red">${pStats.dead}</span></div><div class="divider" style="margin:4px 0"></div><div style="display:flex;justify-content:space-between"><span style="font-size:.82rem;font-weight:700">Total</span><span style="font-weight:700">${state.products.length}</span></div></div>`;
+}
+function updateClock(){const el=document.getElementById('cmd-time');if(el)el.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+setInterval(updateClock,1000);
+
+// FINANCE
+function addTransaction(){
+  const type=document.getElementById('t-type').value;
+  const desc=document.getElementById('t-desc').value.trim();
+  const amount=parseFloat(document.getElementById('t-amount').value)||0;
+  const cat=document.getElementById('t-cat').value;
+  const date=document.getElementById('t-date').value||todayKey();
+  if(!desc||!amount){toast('Remplis tous les champs','var(--red)');return}
+  state.transactions.push({id:'t'+Date.now(),type,desc,amount,cat,date});
+  save();closeModal('modal-add-transaction');
+  ['t-desc','t-amount'].forEach(id=>document.getElementById(id).value='');
+  renderFinance('month');
+  toast(`${type==='revenue'?'+':'-'}${amount}€ enregistré ✓`,type==='revenue'?'var(--green)':'var(--red)');
+}
+function renderFinance(period){
+  const now=new Date();let filtered=state.transactions;
+  if(period==='month')filtered=filtered.filter(t=>t.date.slice(0,7)===now.toISOString().slice(0,7));
+  if(period==='week'){const d7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i);return d.toISOString().slice(0,10)});filtered=filtered.filter(t=>d7.includes(t.date))}
+  const rev=filtered.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
+  const exp=filtered.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const profit=rev-exp;
+  document.getElementById('finance-kpis').innerHTML=`
+    <div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">Revenus</div><div class="kpi-value" style="color:var(--accent3)">${rev.toFixed(2)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--red)"><div class="kpi-label">Dépenses</div><div class="kpi-value" style="color:var(--red)">${exp.toFixed(2)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:${profit>=0?'var(--green)':'var(--red)'}"><div class="kpi-label">Profit net</div><div class="kpi-value" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}${profit.toFixed(2)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">Marge</div><div class="kpi-value" style="color:var(--gold)">${rev>0?((profit/rev)*100).toFixed(1):0}%</div></div>
+  `;
+  const list=document.getElementById('transactions-list');
+  if(!filtered.length){list.innerHTML='<div class="empty"><div class="ei">💰</div><p>Aucune transaction</p></div>';return}
+  list.innerHTML=[...filtered].reverse().map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><span>${t.type==='revenue'?'📈':'📉'}</span><div style="flex:1"><div style="font-size:.85rem;font-weight:600">${t.desc}</div><div style="font-size:.72rem;color:var(--text2)">${fmtDate(t.date)} · ${t.cat}</div></div><span style="font-weight:700;color:${t.type==='revenue'?'var(--accent3)':'var(--red)'}">${t.type==='revenue'?'+':'-'}${t.amount.toFixed(2)}€</span><button onclick="delTransaction('${t.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>`).join('');
+  const cats={};filtered.filter(t=>t.type==='expense').forEach(t=>{cats[t.cat]=(cats[t.cat]||0)+t.amount});
+  const cc={'Publicité':'var(--accent)','Abonnements':'var(--blue)','Fournisseur':'var(--gold)','Autre':'var(--text2)'};
+  document.getElementById('expense-breakdown').innerHTML=Object.entries(cats).length?Object.entries(cats).map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px"><span style="color:var(--text2)">${k}</span><span style="font-weight:700">${v.toFixed(2)}€</span></div><div class="prog-bg"><div class="prog-fill" style="width:${exp>0?(v/exp*100):0}%;background:${cc[k]||'var(--accent)'}"></div></div></div>`).join(''):'<div class="empty"><div class="ei">📊</div><p>Aucune dépense</p></div>';
+}
+function delTransaction(id){state.transactions=state.transactions.filter(t=>t.id!==id);save();renderFinance('month')}
+
+// PRODUCTS
+function saveProduct(){
+  const name=document.getElementById('p-name').value.trim();
+  if(!name){toast('Donne un nom','var(--red)');return}
+  const prod={id:state.editingProductId||'p'+Date.now(),name,status:document.getElementById('p-status').value,budget:parseFloat(document.getElementById('p-budget').value)||0,revenue:parseFloat(document.getElementById('p-revenue').value)||0,score:parseInt(document.getElementById('p-score').value)||5,url:document.getElementById('p-url').value.trim(),notes:document.getElementById('p-notes').value.trim(),date:todayKey()};
+  if(state.editingProductId){const i=state.products.findIndex(p=>p.id===state.editingProductId);if(i>=0)state.products[i]=prod;state.editingProductId=null}else{state.products.push(prod)}
+  save();closeModal('modal-add-product');['p-name','p-budget','p-revenue','p-score','p-url','p-notes'].forEach(id=>document.getElementById(id).value='');renderProducts();toast('Produit enregistré ✓');
+}
+function renderProducts(){
+  const sc={testing:'var(--gold)',scaling:'var(--green)',paused:'var(--blue)',dead:'var(--red)'};
+  const sl={testing:'🟡 Testing',scaling:'🟢 Scaling',paused:'🔵 Pausé',dead:'🔴 Dead'};
+  const testing=state.products.filter(p=>p.status==='testing').length;
+  const scaling=state.products.filter(p=>p.status==='scaling').length;
+  const bestRoi=state.products.length?Math.max(...state.products.map(p=>p.budget>0?((p.revenue-p.budget)/p.budget*100):0)).toFixed(0):0;
+  const totalBudget=state.products.reduce((s,p)=>s+p.budget,0);
+  document.getElementById('product-kpis').innerHTML=`<div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">En test</div><div class="kpi-value" style="color:var(--gold)">${testing}</div></div><div class="kpi-card" style="--kpi-color:var(--green)"><div class="kpi-label">En scaling</div><div class="kpi-value" style="color:var(--green)">${scaling}</div></div><div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">Meilleur ROI</div><div class="kpi-value" style="color:var(--accent3)">${bestRoi}%</div></div><div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Budget total testé</div><div class="kpi-value" style="color:var(--accent)">${totalBudget.toFixed(0)}€</div></div>`;
+  const tbody=document.getElementById('products-tbody');const empty=document.getElementById('products-empty');
+  if(!state.products.length){tbody.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  tbody.innerHTML=state.products.map(p=>{
+    const roi=p.budget>0?((p.revenue-p.budget)/p.budget*100).toFixed(0):'—';
+    const rc=roi==='—'?'var(--text2)':parseFloat(roi)>=0?'var(--green)':'var(--red)';
+    const score_c=p.score>=7?'var(--green)':p.score>=4?'var(--gold)':'var(--red)';
+    return`<tr><td><div style="font-weight:600">${p.name}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:.72rem;color:var(--accent)">Voir →</a>`:''}</td><td><span class="tag" style="background:${sc[p.status]}22;border:1px solid ${sc[p.status]}44;color:${sc[p.status]}">${sl[p.status]}</span></td><td class="mono">${p.budget.toFixed(0)}€</td><td class="mono" style="color:var(--accent3)">${p.revenue.toFixed(0)}€</td><td class="mono" style="color:${rc}">${roi}${roi!=='—'?'%':''}</td><td style="font-weight:700;color:${score_c}">${p.score}/10</td><td style="max-width:120px;font-size:.78rem;color:var(--text2)">${p.notes||'—'}</td><td><button onclick="editProd('${p.id}')" style="background:none;border:none;color:var(--text2);cursor:pointer;margin-right:6px">✎</button><button onclick="delProd('${p.id}')" style="background:none;border:none;color:var(--red);cursor:pointer">✕</button></td></tr>`;
+  }).join('');
+}
+function editProd(id){
+  const p=state.products.find(x=>x.id===id);state.editingProductId=id;
+  document.getElementById('prod-modal-title').textContent='Modifier le produit';
+  ['p-name','p-status','p-budget','p-revenue','p-score','p-url','p-notes'].forEach((fid,i)=>{const vals=[p.name,p.status,p.budget,p.revenue,p.score,p.url||'',p.notes||''];document.getElementById(fid).value=vals[i]});
+  openModal('modal-add-product');
+}
+function delProd(id){if(!confirm('Supprimer ?'))return;state.products=state.products.filter(p=>p.id!==id);save();renderProducts()}
+
+// ADS
+function saveCampaign(){
+  const name=document.getElementById('c-name').value.trim();
+  if(!name){toast('Donne un nom','var(--red)');return}
+  state.campaigns.push({id:'c'+Date.now(),name,platform:document.getElementById('c-platform').value,budget:parseFloat(document.getElementById('c-budget').value)||0,revenue:parseFloat(document.getElementById('c-revenue').value)||0,ctr:parseFloat(document.getElementById('c-ctr').value)||0,cpa:parseFloat(document.getElementById('c-cpa').value)||0,status:document.getElementById('c-status').value,date:todayKey()});
+  save();closeModal('modal-add-campaign');renderAds();toast('Campagne ajoutée ✓');
+}
+function renderAds(){
+  const active=state.campaigns.filter(c=>c.status==='active');
+  const tb=active.reduce((s,c)=>s+c.budget,0);const tr=active.reduce((s,c)=>s+c.revenue,0);
+  const roas=tb>0?(tr/tb).toFixed(2):'—';const avgCtr=active.length?(active.reduce((s,c)=>s+c.ctr,0)/active.length).toFixed(2):'—';
+  document.getElementById('ads-kpis').innerHTML=`<div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Campagnes actives</div><div class="kpi-value" style="color:var(--accent)">${active.length}</div></div><div class="kpi-card" style="--kpi-color:var(--red)"><div class="kpi-label">Budget/jour</div><div class="kpi-value" style="color:var(--red)">${tb.toFixed(0)}€</div></div><div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">ROAS moyen</div><div class="kpi-value" style="color:var(--accent3)">${roas}</div></div><div class="kpi-card" style="--kpi-color:var(--blue)"><div class="kpi-label">CTR moyen</div><div class="kpi-value" style="color:var(--blue)">${avgCtr}%</div></div>`;
+  const list=document.getElementById('campaigns-list');const empty=document.getElementById('campaigns-empty');
+  if(!state.campaigns.length){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  const sc={active:'var(--green)',paused:'var(--gold)',dead:'var(--red)'};
+  list.innerHTML=state.campaigns.map(c=>{const roi=c.budget>0?((c.revenue-c.budget)/c.budget*100).toFixed(0):'—';return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div><div style="font-weight:700;font-size:.9rem">${c.name}</div><div style="font-size:.75rem;color:var(--text2)">${c.platform}</div></div><div style="display:flex;gap:6px;align-items:center"><span class="tag" style="background:${sc[c.status]}22;border:1px solid ${sc[c.status]}44;color:${sc[c.status]}">${c.status}</span><button onclick="delCamp('${c.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:.78rem"><div><div style="color:var(--text2)">Budget/j</div><div class="mono" style="font-weight:700">${c.budget}€</div></div><div><div style="color:var(--text2)">Revenus</div><div class="mono" style="font-weight:700;color:var(--accent3)">${c.revenue}€</div></div><div><div style="color:var(--text2)">CTR</div><div class="mono" style="font-weight:700">${c.ctr}%</div></div><div><div style="color:var(--text2)">ROI</div><div class="mono" style="font-weight:700;color:${roi==='—'?'var(--text2)':parseFloat(roi)>=0?'var(--green)':'var(--red)'}">${roi}${roi!=='—'?'%':''}</div></div></div></div>`}).join('');
+  const sug=[];
+  if(roas!=='—'&&parseFloat(roas)<2)sug.push({t:'danger',m:'🔴 ROAS < 2 — campagnes non rentables. Coupe les moins performantes.'});
+  if(roas!=='—'&&parseFloat(roas)>=3)sug.push({t:'success',m:'✅ ROAS > 3 — augmente progressivement le budget des meilleures campagnes.'});
+  if(avgCtr!=='—'&&parseFloat(avgCtr)<1)sug.push({t:'warn',m:"⚠️ CTR < 1% — tes créatifs n'accrochent pas. Teste de nouveaux visuels."});
+  if(!sug.length)sug.push({t:'info',m:'💡 Ajoute tes campagnes pour recevoir des suggestions.'});
+  document.getElementById('ads-suggestions').innerHTML=sug.map(s=>`<div class="alert alert-${s.t}">${s.m}</div>`).join('');
+}
+function delCamp(id){state.campaigns=state.campaigns.filter(c=>c.id!==id);save();renderAds()}
+
+// ANALYTICS
+function saveMetric(){
+  const date=document.getElementById('m-date').value||todayKey();
+  const existing=state.metrics.findIndex(m=>m.date===date);
+  const metric={date,visitors:parseInt(document.getElementById('m-visitors').value)||0,orders:parseInt(document.getElementById('m-orders').value)||0,revenue:parseFloat(document.getElementById('m-revenue').value)||0,adspend:parseFloat(document.getElementById('m-adspend').value)||0};
+  if(existing>=0)state.metrics[existing]=metric;else state.metrics.push(metric);
+  save();closeModal('modal-add-metric');renderAnalytics();toast('Métriques enregistrées ✓');
+}
+function renderAnalytics(){
+  const tm=state.metrics.find(m=>m.date===todayKey())||{visitors:0,orders:0,revenue:0,adspend:0};
+  const conv=tm.visitors>0?((tm.orders/tm.visitors)*100).toFixed(2):'—';
+  const aov=tm.orders>0?(tm.revenue/tm.orders).toFixed(0):'—';
+  const roas=tm.adspend>0?(tm.revenue/tm.adspend).toFixed(2):'—';
+  document.getElementById('analytics-kpis').innerHTML=`<div class="kpi-card" style="--kpi-color:var(--blue)"><div class="kpi-label">Visiteurs</div><div class="kpi-value" style="color:var(--blue)">${tm.visitors}</div></div><div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">Commandes</div><div class="kpi-value" style="color:var(--accent3)">${tm.orders}</div></div><div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">Taux de conversion</div><div class="kpi-value" style="color:var(--gold)">${conv}%</div></div><div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Panier moyen (AOV)</div><div class="kpi-value" style="color:var(--accent)">${aov}${aov!=='—'?'€':''}</div></div>`;
+  const cart=Math.round(tm.visitors*0.15);const checkout=Math.round(cart*0.4);
+  document.getElementById('funnel').innerHTML=[{l:'Visiteurs',v:tm.visitors,c:'var(--blue)',p:100},{l:'Ajout panier (est.)',v:cart,c:'var(--accent)',p:tm.visitors>0?(cart/tm.visitors*100):0},{l:'Checkout (est.)',v:checkout,c:'var(--gold)',p:tm.visitors>0?(checkout/tm.visitors*100):0},{l:'Commandes',v:tm.orders,c:'var(--accent3)',p:tm.visitors>0?(tm.orders/tm.visitors*100):0}].map(s=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px"><span style="color:var(--text2)">${s.l}</span><span style="font-weight:700;color:${s.c}">${s.v} (${s.p.toFixed(1)}%)</span></div><div class="prog-bg"><div class="prog-fill" style="width:${s.p}%;background:${s.c}"></div></div></div>`).join('');
+  const last7=state.metrics.sort((a,b)=>a.date>b.date?-1:1).slice(0,7);
+  document.getElementById('metrics-history').innerHTML=last7.length?`<table class="data-table"><thead><tr><th>Date</th><th>Visiteurs</th><th>Cmd</th><th>CA</th><th>Pub</th><th>ROAS</th></tr></thead><tbody>${last7.map(m=>{const r=m.adspend>0?(m.revenue/m.adspend).toFixed(1):'—';return`<tr><td class="mono" style="font-size:.78rem">${fmtDate(m.date)}</td><td>${m.visitors}</td><td>${m.orders}</td><td style="color:var(--accent3)">${m.revenue}€</td><td style="color:var(--red)">${m.adspend}€</td><td style="color:${r==='—'?'var(--text2)':parseFloat(r)>=2?'var(--green)':'var(--red)'}">${r}</td></tr>`}).join('')}</tbody></table>`:'<div class="empty"><div class="ei">📊</div><p>Ajoute tes métriques quotidiennes</p></div>';
+}
+
+// TASKS
+const TEMPLATES=[
+  {name:'🚀 Lancer un produit',tasks:['Trouver le produit sur AliExpress/CJ','Créer la page produit Shopify','Configurer les prix & marges','Créer le créatif publicitaire','Lancer campagne test 5-10€/j','Analyser les résultats à J+3']},
+  {name:'📣 Tester une créa',tasks:['Définir l\'angle marketing','Créer le visuel/vidéo','Dupliquer l\'adset existant','Lancer à 5€/j','Analyser CTR à 24h']},
+  {name:'📈 Optimiser campagne',tasks:['Analyser ROAS par adset','Couper les adsets perdants','Scale les adsets rentables x1.5','Tester nouveau public','Vérifier le pixel Shopify']},
+];
+function renderTasks(){
+  const high=state.tasks.filter(t=>t.priority==='high');
+  const med=state.tasks.filter(t=>t.priority==='med');
+  const low=state.tasks.filter(t=>t.priority==='low'||t.done);
+  document.getElementById('count-high').textContent=high.filter(t=>!t.done).length;
+  document.getElementById('count-med').textContent=med.filter(t=>!t.done).length;
+  document.getElementById('count-low').textContent=low.length;
+  ['high','med','low'].forEach(p=>{
+    const list=p==='low'?low:state.tasks.filter(t=>t.priority===p);
+    document.getElementById('tasks-'+p).innerHTML=list.length?list.map(t=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);${t.done?'opacity:.5':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')" style="margin-top:3px;accent-color:var(--accent);cursor:pointer"><div style="flex:1"><div style="font-size:.85rem;font-weight:500;${t.done?'text-decoration:line-through':''}">${t.title}</div><div style="font-size:.72rem;color:var(--text2)">${t.cat||''}${t.deadline?' · ⏰ '+fmtDate(t.deadline):''}</div></div><button onclick="delTask('${t.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem">✕</button></div>`).join(''):'<div class="empty" style="padding:20px"><p>Aucune tâche</p></div>';
+  });
+  document.getElementById('templates-list').innerHTML=TEMPLATES.map((tpl,i)=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px"><div style="font-weight:700;margin-bottom:4px">${tpl.name}</div><div style="font-size:.8rem;color:var(--text2);margin-bottom:10px">${tpl.tasks.length} tâches</div><button class="btn btn-primary btn-sm" onclick="applyTemplate(${i})">Appliquer</button></div>`).join('');
+}
+function addTask(){
+  const title=document.getElementById('task-title').value.trim();
+  if(!title){toast('Écris une tâche','var(--red)');return}
+  state.tasks.push({id:'t'+Date.now(),title,priority:document.getElementById('task-priority').value,deadline:document.getElementById('task-deadline').value||null,cat:document.getElementById('task-cat').value,done:false});
+  save();closeModal('modal-add-task');document.getElementById('task-title').value='';renderTasks();toast('Tâche ajoutée ✓');
+}
+function toggleTask(id){const t=state.tasks.find(x=>x.id===id);if(t)t.done=!t.done;save();renderTasks()}
+function delTask(id){state.tasks=state.tasks.filter(t=>t.id!==id);save();renderTasks()}
+function applyTemplate(idx){const tpl=TEMPLATES[idx];tpl.tasks.forEach(title=>state.tasks.push({id:'t'+Date.now()+Math.random(),title,priority:'high',deadline:null,cat:'Business',done:false}));save();closeModal('modal-template');renderTasks();toast(`Template "${tpl.name}" appliqué ✓`)}
+
+// STRATEGY
+function renderStrategy(){
+  document.getElementById('strategy-notes').value=state.strategyNotes||'';
+  document.getElementById('goals-list').innerHTML=state.goals.length?state.goals.map(g=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)"><div><div style="font-weight:600;font-size:.88rem">${g.title}</div>${g.deadline?`<div style="font-size:.72rem;color:var(--text2);margin-top:2px">⏰ ${fmtDate(g.deadline)}</div>`:''}</div><div style="display:flex;gap:6px;align-items:center"><span class="tag tag-purple">${g.horizon}</span><button onclick="delGoal('${g.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div></div>`).join(''):'<div class="empty"><div class="ei">🎯</div><p>Définis tes objectifs</p></div>';
+  const months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];const now=new Date();
+  document.getElementById('roadmap').innerHTML=`<div style="font-size:.8rem;color:var(--text2);margin-bottom:12px">Mars 2026 → Décembre 2026 · Objectif : 4 000€/jour</div><div style="display:flex;gap:4px;flex-wrap:wrap">${Array.from({length:10},(_,i)=>{const m=(now.getMonth()+i)%12;const isCur=i===0;return`<div style="flex:1;min-width:50px;background:${isCur?'var(--accent)22':'var(--surface2)'};border:1px solid ${isCur?'var(--accent)44':'var(--border)'};border-radius:8px;padding:8px 4px;text-align:center"><div style="font-size:.72rem;font-weight:700;color:${isCur?'var(--accent)':'var(--text2)'}">${months[m]}</div></div>`}).join('')}</div><div style="font-size:.72rem;color:var(--text3);margin-top:10px;text-align:center">9 mois · ${daysLeft()} jours restants</div>`;
+}
+function addGoal(){const title=document.getElementById('goal-title').value.trim();if(!title){toast('Écris un objectif','var(--red)');return}state.goals.push({id:'g'+Date.now(),title,deadline:document.getElementById('goal-deadline').value||null,horizon:document.getElementById('goal-horizon').value});save();closeModal('modal-add-goal');renderStrategy();toast('Objectif ajouté ✓')}
+function delGoal(id){state.goals=state.goals.filter(g=>g.id!==id);save();renderStrategy()}
+function saveStrategyNotes(){state.strategyNotes=document.getElementById('strategy-notes').value;save()}
+
+// HUB
+function renderHub(){
+  const cats={};state.links.forEach(l=>{if(!cats[l.cat])cats[l.cat]=[];cats[l.cat].push(l)});
+  document.getElementById('hub-categories').innerHTML=Object.entries(cats).map(([cat,links])=>`<div style="margin-bottom:24px"><div class="section-title">${cat}</div><div class="grid-auto">${links.map(l=>`<div onclick="window.open('${l.url}','_blank')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;position:relative" onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'"><div style="font-size:1.6rem;margin-bottom:8px">${l.icon||'🔗'}</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:4px">${l.name}</div><div style="font-size:.7rem;color:var(--text3);word-break:break-all">${l.url.replace(/^https?:\/\//,'').split('/')[0]}</div><button onclick="event.stopPropagation();delLink('${l.id}')" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>`).join('')}</div></div>`).join('');
+}
+function addLink(){
+  const name=document.getElementById('l-name').value.trim();let url=document.getElementById('l-url').value.trim();
+  if(!name||!url){toast('Remplis le nom et l\'URL','var(--red)');return}
+  if(!url.startsWith('http'))url='https://'+url;
+  state.links.push({id:'l'+Date.now(),name,url,icon:document.getElementById('l-icon').value.trim()||'🔗',cat:document.getElementById('l-cat').value});
+  save();closeModal('modal-add-link');renderHub();toast('Lien ajouté ✓');
+}
+function delLink(id){state.links=state.links.filter(l=>l.id!==id);save();renderHub()}
+
+// KNOWLEDGE
+function renderKnowledge(){
+  const h=state.formationHours||0;
+  document.getElementById('formation-hours').value=h;
+  document.getElementById('formation-bar').style.width=(h/80*100)+'%';
+  document.getElementById('formation-pct').textContent=(h/80*100).toFixed(0)+'%';
+  document.getElementById('formation-remaining').textContent=(80-h)+'h restantes';
+  document.getElementById('formation-notes').value=state.formationNotes||'';
+  const list=document.getElementById('resources-list');const empty=document.getElementById('resources-empty');
+  if(!state.resources.length){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  list.innerHTML=state.resources.map(r=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start"><div style="font-size:1.2rem">${r.type==='Vidéo'?'🎬':r.type==='Article'?'📄':r.type==='Formation'?'🎓':'📦'}</div><div style="flex:1"><div style="font-weight:600;font-size:.85rem">${r.title}</div>${r.notes?`<div style="font-size:.75rem;color:var(--text2);margin-top:2px">${r.notes}</div>`:''} ${r.url?`<a href="${r.url}" target="_blank" style="font-size:.72rem;color:var(--accent)">Ouvrir →</a>`:''}</div><button onclick="delResource('${r.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>`).join('');
+  document.getElementById('formation-actions').innerHTML=state.formationActions.length?state.formationActions.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><input type="checkbox" ${a.done?'checked':''} onchange="toggleFA('${a.id}')" style="accent-color:var(--accent);cursor:pointer"><span style="flex:1;font-size:.85rem;${a.done?'text-decoration:line-through;opacity:.5':''}">${a.text}</span><button onclick="delFA('${a.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>`).join(''):'';
+}
+function updateFormationProgress(){const h=parseInt(document.getElementById('formation-hours').value)||0;state.formationHours=h;document.getElementById('formation-bar').style.width=(h/80*100)+'%';document.getElementById('formation-pct').textContent=(h/80*100).toFixed(0)+'%';document.getElementById('formation-remaining').textContent=(80-h)+'h restantes';save()}
+function saveFormationNotes(){state.formationNotes=document.getElementById('formation-notes').value;save()}
+function addResource(){const title=document.getElementById('r-title').value.trim();if(!title){toast('Donne un titre','var(--red)');return}state.resources.push({id:'r'+Date.now(),title,url:document.getElementById('r-url').value.trim(),type:document.getElementById('r-type').value,notes:document.getElementById('r-notes').value.trim()});save();closeModal('modal-add-resource');renderKnowledge();toast('Ressource ajoutée ✓')}
+function delResource(id){state.resources=state.resources.filter(r=>r.id!==id);save();renderKnowledge()}
+function addFormationAction(){const text=document.getElementById('new-formation-action').value.trim();if(!text)return;state.formationActions.push({id:'fa'+Date.now(),text,done:false});document.getElementById('new-formation-action').value='';save();renderKnowledge()}
+function toggleFA(id){const a=state.formationActions.find(x=>x.id===id);if(a)a.done=!a.done;save();renderKnowledge()}
+function delFA(id){state.formationActions=state.formationActions.filter(a=>a.id!==id);save();renderKnowledge()}
+
+// AI COACH
+function saveApiKey(){const key=document.getElementById('api-key-input').value.trim();if(!key)return;localStorage.setItem('gabos_apikey',key);closeModal('modal-api-key');toast('Clé API enregistrée ✓','var(--green)')}
+function getApiKey(){return localStorage.getItem('gabos_apikey')}
+function coachQuick(type){
+  const p={analyse:'Analyse mon business en détail et dis-moi où j\'en suis vraiment.',today:'Que dois-je absolument faire aujourd\'hui pour avancer vers mon objectif de 4000€/jour ?',product:'Comment je valide qu\'un produit est bon avant de mettre trop de budget pub dessus ?',motivation:'J\'ai besoin d\'un boost. Dis-moi pourquoi je vais y arriver et ce que je dois faire maintenant.'};
+  document.getElementById('coach-input').value=p[type];sendCoach();
+}
+async function sendCoach(){
+  const input=document.getElementById('coach-input');const msg=input.value.trim();if(!msg)return;input.value='';
+  const apiKey=getApiKey();if(!apiKey){openModal('modal-api-key');return}
+  const mode=document.getElementById('coach-mode').value;
+  const modes={normal:'Sois direct et concret.',strict:'Sois très exigeant, ne tolère aucune excuse, pousse Gab à l\'action immédiate.',soft:'Sois encourageant et bienveillant tout en restant actionnable.'};
+  const totalRev=state.transactions.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
+  const totalExp=state.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const sys=`Tu es l'AI Business Coach de Gab, 100% dédié à son succès en dropshipping.\n\nCONTEXTE:\n- Boutique: purrlopets.com (dropshipping)\n- Objectif: 4 000€/jour en décembre 2026 (${daysLeft()} jours restants)\n- Lycéen, entrepreneur autodidacte\n- CA total: ${totalRev.toFixed(0)}€ | Dépenses: ${totalExp.toFixed(0)}€ | Profit: ${(totalRev-totalExp).toFixed(0)}€\n- Produits actifs: ${state.products.filter(p=>p.status!=='dead').map(p=>p.name).join(', ')||'Aucun'}\n- Formation: ${state.formationHours||0}/80h regardées\n\nMODE: ${modes[mode]}\n\nRéponds toujours en français, avec des actions concrètes. Utilise des emojis. Sois bref et actionnable.`;
+  const box=document.getElementById('coach-messages');
+  box.innerHTML+=`<div class="ai-label user" style="margin-top:16px">TOI</div><div class="ai-message user">${msg}</div>`;
+  const tid='ty'+Date.now();
+  box.innerHTML+=`<div id="${tid}"><div class="ai-label coach">COACH</div><div class="ai-message"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
+  document.getElementById('coach-box').scrollTop=99999;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:msg}]})});
+    const d=await r.json();const reply=d.content?.[0]?.text||'Erreur.';
+    document.getElementById(tid).innerHTML=`<div class="ai-label coach">COACH</div><div class="ai-message">${reply.replace(/\n/g,'<br>')}</div>`;
+  }catch{document.getElementById(tid).innerHTML=`<div class="ai-label coach">COACH</div><div class="ai-message" style="color:var(--red)">Erreur — vérifie ta clé API.</div>`}
+  document.getElementById('coach-box').scrollTop=99999;
+}
+function clearCoach(){document.getElementById('coach-messages').innerHTML='<div class="ai-label coach">GAB OS COACH</div><div class="ai-message">Conversation effacée. Prêt à travailler, Gab 💪</div>'}
+
+// INIT
+renderCommand();
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open')}));
+</script>
+</body>
+</html>
