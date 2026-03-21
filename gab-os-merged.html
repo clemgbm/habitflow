@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080810">
+<title>GAB OS — Full Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#080810;--bg2:#0d0d18;--surface:#111120;--surface2:#191928;--surface3:#20203a;
+  --border:#ffffff0d;--border2:#ffffff18;--text:#f0f0fa;--text2:#8080a8;--text3:#40405a;
+  --accent:#6e57ff;--accent2:#ff4f7b;--accent3:#00f5c4;--gold:#ffd166;
+  --red:#ff4f4f;--green:#00f5a0;--blue:#4fc3ff;
+  --radius:16px;--radius-sm:10px;--shadow:0 0 40px rgba(110,87,255,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4,h5{font-family:'Syne',sans-serif}
+.mono{font-family:'DM Mono',monospace}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:230px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 16px;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s;overflow-y:auto}
+.sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:-1px;margin-bottom:24px;padding:0 6px}
+.sidebar-logo span{color:var(--accent)}
+.sidebar-logo small{display:block;font-size:.6rem;font-weight:400;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.nav-group{margin-bottom:18px}
+.nav-group-label{font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:.85rem;font-weight:500;color:var(--text2);transition:all .18s;margin-bottom:2px;border:1px solid transparent;user-select:none}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--text);background:var(--surface2);border-color:var(--border2)}
+.nav-item .ni{font-size:1rem;width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border)}
+
+/* XP + STREAK BLOCK in sidebar */
+.xp-block{background:linear-gradient(135deg,var(--accent)15,transparent);border:1px solid var(--accent)22;border-radius:var(--radius-sm);padding:12px;margin-bottom:10px}
+.level-badge{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;color:var(--gold);margin-bottom:4px}
+.xp-bar-bg{background:var(--surface2);border-radius:999px;height:6px;overflow:hidden;margin:6px 0}
+.xp-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .6s cubic-bezier(.4,0,.2,1)}
+.xp-label{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text2)}
+.streak-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.25);color:var(--gold);border-radius:999px;padding:4px 10px;font-size:.78rem;font-weight:600;margin-top:8px}
+
+/* Goal block */
+.goal-block{background:linear-gradient(135deg,var(--accent)22,var(--accent2)11);border:1px solid var(--accent)33;border-radius:var(--radius-sm);padding:12px}
+.goal-label{font-size:.65rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.goal-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent3)}
+.goal-sub{font-size:.7rem;color:var(--text2);margin-top:2px}
+.goal-bar-bg{height:4px;background:var(--surface3);border-radius:4px;margin-top:8px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width .6s ease}
+
+/* MAIN */
+.main{margin-left:230px;flex:1;padding:28px 32px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.topbar-left h2{font-size:1.5rem;font-weight:800;letter-spacing:-.5px}
+.topbar-left .sub{font-size:.82rem;color:var(--text2);margin-top:2px}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.date-chip{background:var(--surface);border:1px solid var(--border2);border-radius:999px;padding:7px 16px;font-size:.8rem;color:var(--text2);font-family:'DM Mono',monospace}
+.btn{padding:8px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;transition:all .18s}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{background:#5a45e8;transform:translateY(-1px)}
+.btn.danger{background:var(--red);color:white}
+.btn-ghost{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--accent)}
+.btn-sm{padding:6px 12px;font-size:.75rem}
+.btn-icon{background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-icon:hover{color:var(--text);border-color:var(--accent)}
+
+/* VIEWS */
+.view{display:none}
+.view.active{display:block;animation:fadeUp .22s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* GRIDS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.col-span-2{grid-column:span 2}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+
+/* KPI */
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;transition:all .2s}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent))}
+.kpi-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.kpi-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:8px}
+.kpi-value{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;letter-spacing:-1px}
+.kpi-sub{font-size:.72rem;color:var(--text2);margin-top:4px}
+
+/* SECTION TITLE */
+.section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+
+/* INPUT */
+.inp{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;width:100%}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.inp-row{display:flex;gap:8px;margin-bottom:10px}
+.inp-label{font-size:.72rem;color:var(--text2);margin-bottom:5px;font-weight:600;letter-spacing:.5px}
+.inp-group{margin-bottom:12px}
+select.inp{cursor:pointer}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 10px;font-size:.72rem;font-weight:700}
+.tag-purple{background:var(--accent)22;border:1px solid var(--accent)44;color:var(--accent)}
+.tag-green{background:var(--green)22;border:1px solid var(--green)44;color:var(--green)}
+.tag-red{background:var(--red)22;border:1px solid var(--red)44;color:var(--red)}
+.tag-gold{background:var(--gold)22;border:1px solid var(--gold)44;color:var(--gold)}
+.tag-blue{background:var(--blue)22;border:1px solid var(--blue)44;color:var(--blue)}
+
+/* PROGRESS */
+.prog-bg{height:6px;background:var(--surface3);border-radius:6px;overflow:hidden;margin-top:6px}
+.prog-fill{height:100%;border-radius:6px;transition:width .6s ease}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.data-table td{padding:12px 12px;font-size:.85rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface2)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 20px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;max-width:300px}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* BURST */
+.burst{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:4rem;z-index:9998;pointer-events:none;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s}
+.burst.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+.burst:not(.show){opacity:0;transform:translate(-50%,-50%) scale(0)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;transform:scale(.96);transition:transform .25s}
+.modal-bg.open .modal-box{transform:scale(1)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem}
+.modal-close{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty .ei{font-size:2.5rem;margin-bottom:12px}
+.empty p{font-size:.88rem}
+
+/* ALERT */
+.alert{border-radius:var(--radius-sm);padding:12px 16px;font-size:.84rem;margin-bottom:10px;display:flex;gap:10px;align-items:flex-start}
+.alert-warn{background:var(--gold)11;border:1px solid var(--gold)33;color:var(--gold)}
+.alert-danger{background:var(--red)11;border:1px solid var(--red)33;color:var(--red)}
+.alert-success{background:var(--green)11;border:1px solid var(--green)33;color:var(--green)}
+.alert-info{background:var(--accent)11;border:1px solid var(--accent)33;color:var(--accent)}
+
+/* AI COACH */
+.ai-message{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;margin-bottom:12px;font-size:.88rem;line-height:1.7}
+.ai-message.user{background:var(--accent)11;border-color:var(--accent)33}
+.ai-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.ai-label.coach{color:var(--accent3)}
+.ai-label.user{color:var(--text2)}
+.typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin:0 2px;animation:blink 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/* ── HABIT TRACKER SPECIFIC ── */
+.ring-block{display:flex;align-items:center;gap:28px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.ring-wrap{position:relative;width:130px;height:130px;flex-shrink:0}
+.progress-ring{transform:rotate(-90deg);transform-origin:center}
+.ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800}
+.ring-sub{font-size:.68rem;color:var(--text2)}
+.ring-info{flex:1}
+.ring-msg{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:5px}
+.ring-submsg{color:var(--text2);font-size:.85rem;margin-bottom:14px}
+.tag-row{display:flex;gap:8px;flex-wrap:wrap}
+
+.habits-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.habit-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .15s,border-color .2s;position:relative;overflow:hidden;user-select:none}
+.habit-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--habit-color,var(--accent));border-radius:4px 0 0 4px}
+.habit-card:active{transform:scale(.985)}
+.habit-card.done{border-color:var(--accent3);background:linear-gradient(135deg,var(--surface) 0%,rgba(0,245,196,.06) 100%)}
+.habit-emoji{font-size:26px;flex-shrink:0}
+.habit-info{flex:1;min-width:0}
+.habit-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.habit-card.done .habit-name{opacity:.55;text-decoration:line-through}
+.habit-streak-text{font-size:11px;color:var(--text2);margin-top:2px}
+.habit-xp{font-size:10px;font-weight:700;color:var(--gold);background:rgba(255,209,102,.15);padding:2px 7px;border-radius:8px;margin-right:6px}
+.habit-card.done .habit-xp{color:var(--accent3);background:rgba(0,245,196,.15)}
+.habit-check{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s;flex-shrink:0;background:var(--surface2);color:transparent}
+.habit-card.done .habit-check{background:var(--accent3);border-color:var(--accent3);color:#000}
+.habit-actions{display:flex;gap:5px;opacity:0;transition:opacity .2s}
+.habit-card:hover .habit-actions{opacity:1}
+
+/* Color picker */
+.color-picker-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.color-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.color-dot.sel{border-color:white;transform:scale(1.2)}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:16px}
+.stat-card .s-val{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem}
+.stat-card .s-lbl{font-size:.74rem;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-top:4px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.chart-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px}
+.chart-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+.chart-tabs{display:flex;gap:6px;margin-bottom:12px}
+.chart-tab{padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;background:var(--surface2);border:none;color:var(--text2);cursor:pointer}
+.chart-tab.active{background:var(--accent);color:#fff}
+.mini-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.mini-bar-label{width:100px;font-size:12px;color:var(--text2);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-bar-bg{flex:1;height:6px;background:var(--surface2);border-radius:6px;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:6px}
+.mini-bar-pct{font-size:11px;font-weight:700;color:var(--text2);width:30px;text-align:right}
+.insight-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.insight-card .i-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:7px}
+.insight-card .i-icon{font-size:22px;flex-shrink:0}
+.insight-card .i-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.insight-card .i-body{font-size:13px;color:var(--text2);line-height:1.55}
+.insight-card.goal-card{border-color:var(--accent);background:linear-gradient(135deg,var(--surface),rgba(110,87,255,.06))}
+.insight-card.warn-card{border-color:var(--accent2)}
+.insight-card.ok-card{border-color:var(--accent3);background:linear-gradient(135deg,var(--surface),rgba(0,245,196,.04))}
+
+/* Objectives */
+.obj-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+.obj-card-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;margin-bottom:16px}
+.obj-list{display:flex;flex-direction:column;gap:12px}
+.obj-item{display:flex;gap:12px;align-items:flex-start}
+.obj-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.obj-text{font-size:.9rem;line-height:1.55}
+
+/* Rewards */
+.rewards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.reward-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;transition:all .2s}
+.reward-card.unlocked{border-color:var(--gold);background:rgba(255,209,102,.08)}
+.reward-card.locked{opacity:.45;filter:grayscale(.7)}
+.reward-icon{font-size:2rem;margin-bottom:8px}
+.reward-name{font-family:'Syne',sans-serif;font-size:.86rem;font-weight:700;margin-bottom:3px}
+.reward-cond{font-size:.72rem;color:var(--text2)}
+.reward-unlocked-tag{color:var(--gold);font-size:.72rem;font-weight:700;margin-top:6px}
+
+/* Manage habits */
+.habit-manage-item{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hm-emoji{font-size:22px}
+.hm-name{flex:1;font-weight:600;font-size:14px}
+.hm-btns{display:flex;gap:6px}
+.hm-btn{background:var(--surface2);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px;transition:background .15s;color:var(--text2)}
+
+/* Notif toggles */
+.notif-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 0}
+.notif-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.notif-row:last-child{border-bottom:none}
+.notif-label{font-weight:600;font-size:.88rem;margin-bottom:2px}
+.notif-sub{font-size:.75rem;color:var(--text2)}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--surface3);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:white;top:3px;left:3px;transition:transform .2s}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{transform:translateX(20px)}
+.manage-section{margin-bottom:8px}
+.separator{height:1px;background:var(--border);margin:20px 0}
+.empty-state{text-align:center;padding:30px;color:var(--text2);font-size:.88rem}
+
+/* Links */
+.links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+.link-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:16px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:transform .15s,border-color .2s;text-decoration:none;color:var(--text);position:relative;overflow:hidden}
+.link-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.lc-icon{font-size:24px}
+.lc-name{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.lc-url{font-size:10px;color:var(--text3);word-break:break-all}
+.lc-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;padding:4px;opacity:0;transition:opacity .15s}
+.link-card:hover .lc-del{opacity:1}
+
+/* Habit add modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;transform:translateY(30px);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.modal-overlay.open .modal-sheet{transform:translateY(0)}
+.modal-row{margin-bottom:14px}
+.modal-label{font-size:.78rem;color:var(--text2);margin-bottom:7px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.modal-btns{display:flex;gap:10px;margin-top:20px}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:8px}
+.emoji-btn{font-size:24px;background:var(--surface2);border:2px solid transparent;border-radius:10px;padding:6px 9px;cursor:pointer;transition:all .15s}
+.emoji-btn.sel{border-color:var(--accent);background:rgba(110,87,255,.15)}
+
+/* Recap modal */
+.recap-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.recap-modal.open{opacity:1;pointer-events:all}
+.recap-inner{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto}
+.recap-inner h2{font-size:1.4rem;margin-bottom:12px}
+.recap-badge{display:inline-block;background:linear-gradient(90deg,var(--accent),var(--accent2));color:white;font-family:'Syne',sans-serif;font-weight:800;padding:6px 18px;border-radius:999px;font-size:.88rem;margin-bottom:16px}
+.recap-text{font-size:.88rem;line-height:1.8;color:var(--text2)}
+.recap-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.recap-section h4{font-size:.9rem;margin-bottom:10px;color:var(--text)}
+
+/* HAMBURGER */
+.hamburger{display:none;background:var(--surface);border:1px solid var(--border2);border-radius:8px;width:36px;height:36px;cursor:pointer;color:var(--text);font-size:1.1rem;align-items:center;justify-content:center}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.sidebar-overlay.show{display:block}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
+
+/* MOBILE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:16px}
+  .hamburger{display:flex}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-3,.grid-2{grid-template-columns:1fr}
+  .col-span-2{grid-column:span 1}
+  .chart-grid{grid-template-columns:1fr}
+  .ring-block{flex-direction:column;text-align:center}
+  .tag-row{justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">GAB<span>OS</span><small>Full Dashboard</small></div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Habitudes</div>
+    <div class="nav-item active" onclick="showView('today')" id="nav-today"><span class="ni">✦</span> Aujourd'hui</div>
+    <div class="nav-item" onclick="showView('stats')" id="nav-stats"><span class="ni">◈</span> Stats</div>
+    <div class="nav-item" onclick="showView('objectives')" id="nav-objectives"><span class="ni">◎</span> Objectifs</div>
+    <div class="nav-item" onclick="showView('rewards')" id="nav-rewards"><span class="ni">★</span> Récompenses</div>
+    <div class="nav-item" onclick="showView('manage')" id="nav-manage"><span class="ni">⚙</span> Gérer habitudes</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Business</div>
+    <div class="nav-item" onclick="showView('command')" id="nav-command"><span class="ni">⚡</span> Command Center</div>
+    <div class="nav-item" onclick="showView('finance')" id="nav-finance"><span class="ni">💰</span> Finance</div>
+    <div class="nav-item" onclick="showView('products')" id="nav-products"><span class="ni">🧪</span> Product Lab</div>
+    <div class="nav-item" onclick="showView('ads')" id="nav-ads"><span class="ni">📣</span> Ads Control</div>
+    <div class="nav-item" onclick="showView('analytics')" id="nav-analytics"><span class="ni">📊</span> Analytics</div>
+    <div class="nav-item" onclick="showView('tasks')" id="nav-tasks"><span class="ni">✅</span> Execution Panel</div>
+    <div class="nav-item" onclick="showView('strategy')" id="nav-strategy"><span class="ni">🗺</span> Strategy Board</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Ressources</div>
+    <div class="nav-item" onclick="showView('hub')" id="nav-hub"><span class="ni">🔗</span> Hub de liens</div>
+    <div class="nav-item" onclick="showView('knowledge')" id="nav-knowledge"><span class="ni">🎓</span> Knowledge</div>
+    <div class="nav-item" onclick="showView('coach')" id="nav-coach"><span class="ni">🤖</span> AI Coach</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="xp-block">
+      <div class="level-badge" id="s-level-badge">🌱 Niveau 1</div>
+      <div class="xp-bar-bg"><div class="xp-bar-fill" id="s-xp-bar" style="width:0%"></div></div>
+      <div class="xp-label"><span id="s-xp-val">0 / 100 XP</span></div>
+      <div class="streak-pill" id="s-streak">🔥 0 jours</div>
+    </div>
+    <div class="goal-block" style="margin-top:10px">
+      <div class="goal-label">Objectif Business</div>
+      <div class="goal-val">4 000€/jour</div>
+      <div class="goal-sub" id="goal-days-left-sidebar">— jours restants</div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" id="goal-bar-sidebar" style="width:2%"></div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ═══════ HABITS: TODAY ═══════ -->
+<div class="view active" id="view-today">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button>
+      <div><h2 id="today-title">Bonjour 👋</h2><div class="sub" id="today-date"></div></div></div>
+    </div>
+    <div class="topbar-right">
+      <div class="date-chip" id="clock-today">--:--</div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Habitude</button>
+    </div>
+  </div>
+
+  <div class="ring-block">
+    <div class="ring-wrap">
+      <svg class="progress-ring" width="130" height="130" viewBox="0 0 130 130">
+        <circle cx="65" cy="65" r="54" fill="none" stroke="var(--surface3)" stroke-width="10"/>
+        <circle id="ring-circle" cx="65" cy="65" r="54" fill="none" stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="339.3" style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
+        <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--accent3)"/></linearGradient></defs>
+      </svg>
+      <div class="ring-label"><div class="ring-pct" id="ring-pct">0%</div><div class="ring-sub">Complété</div></div>
+    </div>
+    <div class="ring-info">
+      <div class="ring-msg" id="ring-msg">Lance-toi !</div>
+      <div class="ring-submsg" id="ring-submsg">Commence par une petite habitude.</div>
+      <div class="tag-row">
+        <span class="tag tag-green">✓ <span id="done-count">0</span> faites</span>
+        <span class="tag tag-purple">⏳ <span id="remain-count">0</span> restantes</span>
+        <span class="tag tag-gold">⚡ +<span id="today-xp-total">0</span> XP</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="habits-list" id="habits-list"></div>
+  <div id="today-insight"></div>
+</div>
+
+<!-- ═══════ HABITS: STATS ═══════ -->
+<div class="view" id="view-stats">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>📈 Statistiques</h2></div></div>
+    <div class="topbar-right">
+      <div class="chart-tabs">
+        <button class="chart-tab active" id="tab-week" onclick="setStatRange('week',this)">7j</button>
+        <button class="chart-tab" id="tab-month" onclick="setStatRange('month',this)">30j</button>
+      </div>
+    </div>
+  </div>
+  <div class="stats-grid" id="stats-kpis"></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Complétion quotidienne</div>
+      <div style="position:relative;height:190px"><canvas id="chart-daily"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Progression XP</div>
+      <div style="position:relative;height:190px"><canvas id="chart-xp"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-card" style="margin-bottom:16px">
+    <div class="chart-title">Par habitude cette semaine</div>
+    <div id="mini-bars"></div>
+  </div>
+  <div id="insight-cards"></div>
+  <div class="insight-card goal-card" id="next-goal">
+    <div class="i-head"><span class="i-icon">🎯</span><div><div class="i-title">Objectif semaine prochaine</div></div></div>
+    <div class="i-body" id="next-goal-text">Complète au moins 5 habitudes/jour.</div>
+  </div>
+</div>
+
+<!-- ═══════ HABITS: OBJECTIVES ═══════ -->
+<div class="view" id="view-objectives">
+  <div class="topbar"><div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🎯 Objectifs & Analyse</h2></div></div></div>
+  <div id="objectives-content"></div>
+</div>
+
+<!-- ═══════ HABITS: REWARDS ═══════ -->
+<div class="view" id="view-rewards">
+  <div class="topbar"><div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🏆 Récompenses</h2></div></div></div>
+  <div class="stats-grid" id="rewards-stats"></div>
+  <div class="section-title">Badges</div>
+  <div class="rewards-grid" id="rewards-grid"></div>
+</div>
+
+<!-- ═══════ HABITS: MANAGE ═══════ -->
+<div class="view" id="view-manage">
+  <div class="topbar"><div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>⚙ Gérer les habitudes</h2></div></div></div>
+  <div class="manage-section">
+    <div class="section-title">Mes habitudes</div>
+    <div id="manage-list"></div>
+    <button class="btn btn-primary" onclick="openAddModal()" style="width:100%;margin-top:8px">+ Nouvelle habitude</button>
+  </div>
+  <div class="separator"></div>
+  <div class="manage-section">
+    <div class="section-title">Ajouter rapidement</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="inp" id="quick-name" placeholder="Nom de l'habitude...">
+      <button class="btn btn-primary btn-sm" onclick="quickAddHabit()" style="white-space:nowrap">Ajouter</button>
+    </div>
+    <div class="color-picker-row" id="color-picker"></div>
+  </div>
+  <div class="separator"></div>
+  <div class="manage-section">
+    <div class="section-title">Notifications</div>
+    <div class="notif-card">
+      <div class="notif-row"><div><div class="notif-label">Rappel quotidien — 21h</div><div class="notif-sub">Rappel pour compléter tes habitudes</div></div><div class="toggle on" id="tog-daily" onclick="toggleNotif('daily',this)"></div></div>
+      <div class="notif-row"><div><div class="notif-label">Récap lundi — 21h</div><div class="notif-sub">Bilan semaine + objectifs</div></div><div class="toggle on" id="tog-weekly" onclick="toggleNotif('weekly',this)"></div></div>
+      <div class="notif-row"><div><div class="notif-label">Alerte streak en danger</div><div class="notif-sub">Si tu n'as rien fait à 20h</div></div><div class="toggle" id="tog-streak" onclick="toggleNotif('streak',this)"></div></div>
+    </div>
+  </div>
+  <div class="separator"></div>
+  <div class="manage-section">
+    <div class="section-title">Réinitialiser</div>
+    <button class="btn danger" style="width:100%" onclick="confirmReset()">🗑 Réinitialiser les données habitudes</button>
+  </div>
+</div>
+
+<!-- ═══════ BUSINESS: COMMAND CENTER ═══════ -->
+<div class="view" id="view-command">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><div><h2 id="cmd-greeting">Bonjour, Gab 👋</h2><div class="sub" id="cmd-date"></div></div></div></div>
+    <div class="topbar-right"><div class="date-chip mono" id="cmd-clock">--:--:--</div></div>
+  </div>
+  <div id="cmd-alert-zone" style="margin-bottom:16px"></div>
+  <div class="grid-4" id="cmd-kpis"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">⚡ Tâches du jour</div><div id="cmd-tasks"></div><button class="btn btn-ghost btn-sm" onclick="showView('tasks')" style="margin-top:10px;width:100%">Voir tout →</button></div>
+    <div class="card"><div class="card-title">🧪 Produits actifs</div><div id="cmd-products"></div><button class="btn btn-ghost btn-sm" onclick="showView('products')" style="margin-top:10px;width:100%">Voir tout →</button></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📅 Objectif de la journée</div>
+    <div style="font-size:.82rem;color:var(--text2);margin-bottom:8px" id="goal-days-left">— jours restants</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--accent3)">4 000€/jour en Décembre 2026</div>
+    <div class="goal-bar-bg" style="margin-top:12px"><div class="goal-bar-fill" id="goal-progress-bar" style="width:1%"></div></div>
+  </div>
+</div>
+
+<!-- ═══════ BUSINESS: FINANCE ═══════ -->
+<div class="view" id="view-finance">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>💰 Finance Tracker</h2></div></div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="renderFinance('month')">30j</button>
+      <button class="btn btn-ghost btn-sm" onclick="renderFinance('all')">Tout</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-transaction')">+ Transaction</button>
+    </div>
+  </div>
+  <div class="grid-4" id="finance-kpis"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">📈 Revenus vs Dépenses</div><div style="position:relative;height:200px"><canvas id="chart-finance"></canvas></div></div>
+    <div class="card"><div class="card-title">🥧 Répartition dépenses</div><div style="position:relative;height:200px"><canvas id="chart-pie"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:0"><div class="card-title">📋 Historique transactions</div><div id="transactions-table"></div></div>
+</div>
+
+<!-- ═══════ BUSINESS: PRODUCTS ═══════ -->
+<div class="view" id="view-products">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🧪 Product Lab</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-product')">+ Produit</button></div>
+  </div>
+  <div id="products-list"></div>
+</div>
+
+<!-- ═══════ BUSINESS: ADS ═══════ -->
+<div class="view" id="view-ads">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>📣 Ads Control</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-campaign')">+ Campagne</button></div>
+  </div>
+  <div class="grid-4" id="ads-kpis"></div>
+  <div id="ads-suggestions" style="margin-bottom:16px"></div>
+  <div class="card"><div class="card-title">📋 Campagnes</div><div id="campaigns-list"></div><div class="empty" id="campaigns-empty" style="display:none"><div class="ei">📣</div><p>Ajoute tes campagnes pub</p></div></div>
+</div>
+
+<!-- ═══════ BUSINESS: ANALYTICS ═══════ -->
+<div class="view" id="view-analytics">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>📊 Analytics</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-metric')">+ Métriques</button></div>
+  </div>
+  <div class="grid-4" id="analytics-kpis"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">🔽 Funnel de conversion</div><div id="funnel"></div></div>
+    <div class="card"><div class="card-title">📋 Historique (7j)</div><div id="metrics-history"></div></div>
+  </div>
+</div>
+
+<!-- ═══════ BUSINESS: TASKS ═══════ -->
+<div class="view" id="view-tasks">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>✅ Execution Panel</h2></div></div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="openModal('modal-template')">📋 Templates</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-task')">+ Tâche</button>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="card"><div class="card-title">🔴 Haute priorité <span class="tag tag-red" id="count-high">0</span></div><div id="tasks-high"></div></div>
+    <div class="card"><div class="card-title">🟡 Moyenne <span class="tag tag-gold" id="count-med">0</span></div><div id="tasks-med"></div></div>
+    <div class="card"><div class="card-title">🟢 Faible / Done <span class="tag tag-green" id="count-low">0</span></div><div id="tasks-low"></div></div>
+  </div>
+</div>
+
+<!-- ═══════ BUSINESS: STRATEGY ═══════ -->
+<div class="view" id="view-strategy">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🗺 Strategy Board</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-goal')">+ Objectif</button></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">🎯 Vision & Objectifs</div><div id="goals-list"></div></div>
+    <div class="card"><div class="card-title">🗓 Roadmap Mars → Déc 2026</div><div id="roadmap"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📝 Notes stratégiques</div>
+    <textarea class="inp" id="strategy-notes" rows="6" placeholder="Angles marketing, idées, observations..." style="resize:vertical" oninput="saveStrategyNotes()"></textarea>
+  </div>
+</div>
+
+<!-- ═══════ HUB ═══════ -->
+<div class="view" id="view-hub">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🔗 Hub de liens</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-link')">+ Lien</button></div>
+  </div>
+  <div id="hub-categories"></div>
+</div>
+
+<!-- ═══════ KNOWLEDGE ═══════ -->
+<div class="view" id="view-knowledge">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🎓 Knowledge Center</h2></div></div>
+    <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="openModal('modal-add-resource')">+ Ressource</button></div>
+  </div>
+  <div class="grid-2">
+    <div class="card" style="border-color:var(--accent)44">
+      <div class="card-title">⚡ Formation principale <span class="tag tag-purple">Mega.nz</span></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:4px">Formation Dropshipping</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:14px">80h de contenu · Accès privé</div>
+      <div class="inp-group"><div class="inp-label">Heures visionnées</div><div class="inp-row"><input class="inp" type="number" id="formation-hours" placeholder="0" min="0" max="80" oninput="updateFormationProgress()"><span style="display:flex;align-items:center;color:var(--text2);font-size:.85rem;white-space:nowrap">/ 80h</span></div></div>
+      <div class="prog-bg" style="height:8px;margin-bottom:8px"><div class="prog-fill" id="formation-bar" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--accent3))"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text2)"><span id="formation-pct">0%</span><span id="formation-remaining">80h restantes</span></div>
+      <div class="inp-group" style="margin-top:14px"><div class="inp-label">Notes de la formation</div><textarea class="inp" id="formation-notes" rows="4" placeholder="Ce que tu as retenu..." oninput="saveFormationNotes()" style="resize:vertical"></textarea></div>
+      <a href="https://mega.nz/folder/FQg2lSaS#rYlByvveQyHOpaXHvHDITg" target="_blank" class="btn btn-primary" style="width:100%;text-align:center;text-decoration:none;display:block;margin-top:12px">▶ Ouvrir sur Mega.nz</a>
+    </div>
+    <div class="card"><div class="card-title">📚 Autres ressources</div><div id="resources-list"></div><div class="empty" id="resources-empty"><div class="ei">📚</div><p>Ajoute des vidéos, articles, formations...</p></div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">✅ Actions à appliquer depuis la formation</div>
+    <div id="formation-actions"></div>
+    <div class="inp-row" style="margin-top:12px"><input class="inp" id="new-formation-action" placeholder="Action concrète à appliquer..."><button class="btn btn-primary btn-sm" onclick="addFormationAction()" style="white-space:nowrap">+ Ajouter</button></div>
+  </div>
+</div>
+
+<!-- ═══════ AI COACH ═══════ -->
+<div class="view" id="view-coach">
+  <div class="topbar">
+    <div class="topbar-left"><div style="display:flex;gap:10px;align-items:center"><button class="hamburger" onclick="openSidebar()">☰</button><h2>🤖 AI Business Coach</h2></div></div>
+    <div class="topbar-right">
+      <select class="inp" id="coach-mode" style="width:auto;padding:6px 12px;font-size:.8rem"><option value="normal">Mode Normal</option><option value="strict">Mode Strict 🔥</option><option value="soft">Mode Soft</option></select>
+      <button class="btn btn-ghost btn-sm" onclick="clearCoach()">Effacer</button>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('modal-api-key')">🔑 API</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+    <button class="btn btn-ghost" onclick="coachQuick('analyse')" style="font-size:.8rem">📊 Analyser</button>
+    <button class="btn btn-ghost" onclick="coachQuick('today')" style="font-size:.8rem">⚡ Que faire ?</button>
+    <button class="btn btn-ghost" onclick="coachQuick('product')" style="font-size:.8rem">🧪 Valider produit</button>
+    <button class="btn btn-ghost" onclick="coachQuick('motivation')" style="font-size:.8rem">🔥 Remotiver</button>
+  </div>
+  <div class="card" style="margin-bottom:16px;min-height:300px;max-height:500px;overflow-y:auto" id="coach-box">
+    <div id="coach-messages">
+      <div class="ai-label coach">GAB OS COACH</div>
+      <div class="ai-message">Salut Gab 👋 Je suis ton AI Business Coach, 100% dédié à ton objectif : <strong>4 000€/jour en décembre 2026</strong>.<br><br>Configure ta clé API Anthropic (bouton 🔑 en haut) pour activer le vrai coaching IA. Qu'est-ce qu'on travaille ? 💪</div>
+    </div>
+  </div>
+  <div class="inp-row"><input class="inp" id="coach-input" placeholder="Pose une question ou décris ta situation..." onkeydown="if(event.key==='Enter')sendCoach()"><button class="btn btn-primary" onclick="sendCoach()">Envoyer</button></div>
+  <div style="font-size:.72rem;color:var(--text3);margin-top:6px">Nécessite une clé API Anthropic — <span style="color:var(--accent);cursor:pointer" onclick="openModal('modal-api-key')">Configurer →</span></div>
+</div>
+
+</main>
+</div>
+
+<!-- ═══════ MODALS - BUSINESS ═══════ -->
+<div class="modal-bg" id="modal-add-transaction"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">+ Transaction</div><button class="modal-close" onclick="closeModal('modal-add-transaction')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Type</div><select class="inp" id="t-type"><option value="revenue">Revenu 📈</option><option value="expense">Dépense 📉</option></select></div>
+  <div class="inp-group"><div class="inp-label">Description</div><input class="inp" id="t-desc" placeholder="Ex: Vente produit X"></div>
+  <div class="inp-group"><div class="inp-label">Montant (€)</div><input class="inp" type="number" id="t-amount" placeholder="0" min="0"></div>
+  <div class="inp-group"><div class="inp-label">Catégorie</div><select class="inp" id="t-cat"><option>Ventes</option><option>Publicité</option><option>Abonnements</option><option>Fournisseur</option><option>Autre</option></select></div>
+  <div class="inp-group"><div class="inp-label">Date</div><input class="inp" type="date" id="t-date"></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addTransaction()">Ajouter</button>
+</div></div>
+
+<div class="modal-bg" id="modal-add-product"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title" id="modal-product-title">+ Produit</div><button class="modal-close" onclick="closeModal('modal-add-product')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Nom</div><input class="inp" id="p-name" placeholder="Ex: Collier LED chat"></div>
+  <div class="inp-group"><div class="inp-label">Statut</div><select class="inp" id="p-status"><option value="testing">🧪 En test</option><option value="scaling">🚀 Scaling</option><option value="dead">💀 Mort</option><option value="paused">⏸ Pausé</option></select></div>
+  <div class="inp-group"><div class="inp-label">Prix de vente (€)</div><input class="inp" type="number" id="p-price" placeholder="29.99" min="0" step="0.01"></div>
+  <div class="inp-group"><div class="inp-label">Coût produit (€)</div><input class="inp" type="number" id="p-cost" placeholder="5.00" min="0" step="0.01"></div>
+  <div class="inp-group"><div class="inp-label">Budget pub/jour (€)</div><input class="inp" type="number" id="p-adbudget" placeholder="10" min="0"></div>
+  <div class="inp-group"><div class="inp-label">Notes</div><textarea class="inp" id="p-notes" rows="3" placeholder="Fournisseur, angle marketing..."></textarea></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveProduct()">Enregistrer</button>
+</div></div>
+
+<div class="modal-bg" id="modal-add-campaign"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">+ Campagne</div><button class="modal-close" onclick="closeModal('modal-add-campaign')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Nom</div><input class="inp" id="c-name" placeholder="Ex: LED Cat Collar - FR - INT"></div>
+  <div class="inp-group"><div class="inp-label">Plateforme</div><select class="inp" id="c-platform"><option>Meta Ads</option><option>TikTok Ads</option><option>Google Ads</option><option>Pinterest Ads</option></select></div>
+  <div class="inp-group"><div class="inp-label">Budget/jour (€)</div><input class="inp" type="number" id="c-budget" placeholder="10" min="0"></div>
+  <div class="inp-group"><div class="inp-label">Revenus générés (€)</div><input class="inp" type="number" id="c-revenue" placeholder="0" min="0"></div>
+  <div class="inp-group"><div class="inp-label">CTR (%)</div><input class="inp" type="number" id="c-ctr" placeholder="0.00" step="0.01" min="0"></div>
+  <div class="inp-group"><div class="inp-label">Statut</div><select class="inp" id="c-status"><option value="active">Active</option><option value="paused">Pausée</option><option value="dead">Coupée</option></select></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addCampaign()">Ajouter</button>
+</div></div>
+
+<div class="modal-bg" id="modal-add-metric"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">+ Métriques du jour</div><button class="modal-close" onclick="closeModal('modal-add-metric')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Date</div><input class="inp" type="date" id="m-date"></div>
+  <div class="inp-group"><div class="inp-label">Visiteurs</div><input class="inp" type="number" id="m-visitors" placeholder="0" min="0"></div>
+  <div class="inp-group"><div class="inp-label">Commandes</div><input class="inp" type="number" id="m-orders" placeholder="0" min="0"></div>
+  <div class="inp-group"><div class="inp-label">Revenus (€)</div><input class="inp" type="number" id="m-revenue" placeholder="0" min="0" step="0.01"></div>
+  <div class="inp-group"><div class="inp-label">Dépenses pub (€)</div><input class="inp" type="number" id="m-adspend" placeholder="0" min="0" step="0.01"></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveMetric()">Enregistrer</button>
+</div></div>
+
+<div class="modal-bg" id="modal-add-task"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">+ Tâche</div><button class="modal-close" onclick="closeModal('modal-add-task')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Titre</div><input class="inp" id="task-title" placeholder="Ex: Créer nouvelle créa TikTok"></div>
+  <div class="inp-group"><div class="inp-label">Priorité</div><select class="inp" id="task-priority"><option value="high">🔴 Haute</option><option value="med" selected>🟡 Moyenne</option><option value="low">🟢 Faible</option></select></div>
+  <div class="inp-group"><div class="inp-label">Catégorie</div><select class="inp" id="task-cat"><option>Business</option><option>Publicité</option><option>Produit</option><option>Finance</option><option>Autre</option></select></div>
+  <div class="inp-group"><div class="inp-label">Deadline</div><input class="inp" type="date" id="task-deadline"></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addTask()">Ajouter</button>
+</div></div>
+
+<div class="modal-bg" id="modal-template"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">📋 Templates</div><button class="modal-close" onclick="closeModal('modal-template')">✕</button></div>
+  <div id="templates-list"></div>
+</div></div>
+
+<div class="modal-bg" id="modal-add-goal"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">+ Objectif</div><button class="modal-close" onclick="closeModal('modal-add-goal')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Objectif</div><input class="inp" id="goal-title" placeholder="Ex: Atteindre 1000€/jour"></div>
+  <div class="inp-group"><div class="inp-label">Horizon</div><select class="inp" id="goal-horizon"><option>Semaine</option><option>Mois</option><option>Trimestre</option><option>Année</option></select></div>
+  <div class="inp-group"><div class="inp-label">Deadline</div><input class="inp" type="date" id="goal-deadline"></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addGoal()">Ajouter</button>
+</div></div>
+
+<div class="modal-bg" id="modal-add-link"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">+ Lien</div><button class="modal-close" onclick="closeModal('modal-add-link')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Nom</div><input class="inp" id="l-name" placeholder="Ex: Shopify Admin"></div>
+  <div class="inp-group"><div class="inp-label">URL</div><input class="inp" id="l-url" placeholder="https://..."></div>
+  <div class="inp-group"><div class="inp-label">Icône</div><input class="inp" id="l-icon" placeholder="🔗"></div>
+  <div class="inp-group"><div class="inp-label">Catégorie</div><select class="inp" id="l-cat"><option>E-commerce</option><option>Publicité</option><option>Formation</option><option>Communication</option><option>Outils</option><option>Autre</option></select></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addLink()">Ajouter</button>
+</div></div>
+
+<div class="modal-bg" id="modal-add-resource"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">+ Ressource</div><button class="modal-close" onclick="closeModal('modal-add-resource')">✕</button></div>
+  <div class="inp-group"><div class="inp-label">Titre</div><input class="inp" id="r-title" placeholder="Ex: Vidéo stratégie TikTok Ads"></div>
+  <div class="inp-group"><div class="inp-label">URL</div><input class="inp" id="r-url" placeholder="https://..."></div>
+  <div class="inp-group"><div class="inp-label">Type</div><select class="inp" id="r-type"><option>Vidéo</option><option>Article</option><option>Formation</option><option>Outil</option><option>Autre</option></select></div>
+  <div class="inp-group"><div class="inp-label">Notes</div><textarea class="inp" id="r-notes" rows="3" placeholder="Ce que tu veux retenir..."></textarea></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addResource()">Ajouter</button>
+</div></div>
+
+<div class="modal-bg" id="modal-api-key"><div class="modal-box">
+  <div class="modal-header"><div class="modal-title">🔑 Clé API Anthropic</div><button class="modal-close" onclick="closeModal('modal-api-key')">✕</button></div>
+  <div class="alert alert-info" style="margin-bottom:16px">Ta clé est stockée uniquement sur ton appareil.</div>
+  <div class="inp-group"><div class="inp-label">Clé API (sk-ant-...)</div><input class="inp" type="password" id="api-key-input" placeholder="sk-ant-api03-..."></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveApiKey()">Enregistrer</button>
+  <div style="font-size:.75rem;color:var(--text2);margin-top:10px">Obtiens ta clé sur <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a></div>
+</div></div>
+
+<!-- ═══════ MODAL - ADD HABIT ═══════ -->
+<div class="modal-overlay" id="habitModal">
+  <div class="modal-sheet">
+    <h3 id="modal-title" style="margin-bottom:16px">Nouvelle habitude</h3>
+    <div class="modal-row"><div class="modal-label">Nom</div><input class="inp" id="modal-name" placeholder="Ex: Méditation"></div>
+    <div class="modal-row"><div class="modal-label">Emoji</div><div class="emoji-grid" id="emoji-grid"></div></div>
+    <div class="modal-row"><div class="modal-label">XP par complétion</div><input class="inp" id="modal-xp" type="number" placeholder="10" value="10" min="5" max="50"></div>
+    <div class="modal-row"><div class="modal-label">Couleur</div><div class="color-picker-row" id="modal-color-picker"></div></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeHabitModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveHabit()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECAP MODAL -->
+<div class="recap-modal" id="recapModal">
+  <div class="recap-inner">
+    <h2>Récap de la semaine 📋</h2>
+    <div class="recap-badge" id="recap-badge">Grade S</div>
+    <div class="recap-text" id="recap-content"></div>
+    <div style="margin-top:20px;text-align:center"><button class="btn btn-primary" onclick="closeRecap()">C'est noté ! 💪</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="burst" id="burst"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONSTANTS (HABITS)
+// ═══════════════════════════════════════════════
+const COLORS = ['#6e57ff','#ff4f7b','#00f5c4','#ffd166','#00f5a0','#ff4f4f','#4fc3ff','#f77f00'];
+const EMOJIS = ['📚','💼','⚽','🧠','🤸','🧘','🏃','💪','🎯','🎨','🎵','🍎','💤','🧪','✍️','🌱','🔥','⚡'];
+const BADGES = [
+  {id:'b1',icon:'🔥',name:'7 Jours',cond:'7 jours de suite',req:{streak:7}},
+  {id:'b2',icon:'💎',name:'30 Jours',cond:'30 jours de suite',req:{streak:30}},
+  {id:'b3',icon:'⚡',name:'Perfectionniste',cond:'100% une journée',req:{perfect:1}},
+  {id:'b4',icon:'🌟',name:'Semaine parfaite',cond:'7 jours parfaits',req:{perfectDays:7}},
+  {id:'b5',icon:'🏆',name:'Niveau 5',cond:'Atteindre niveau 5',req:{level:5}},
+  {id:'b6',icon:'🎯',name:'Maestro',cond:'Niveau 10',req:{level:10}},
+  {id:'b7',icon:'🦅',name:'Matinal',cond:'5+ habitudes actives',req:{habitsCount:5}},
+  {id:'b8',icon:'👑',name:'Légende',cond:'100 jours de streak',req:{streak:100}},
+];
+const LEVELS = [
+  {min:0,name:'Débutant',emoji:'🌱'},
+  {min:100,name:'Régulier',emoji:'⚡'},
+  {min:300,name:'Déterminé',emoji:'🔥'},
+  {min:600,name:'Discipliné',emoji:'💎'},
+  {min:1000,name:'Elite',emoji:'🏆'},
+  {min:2000,name:'Inarrêtable',emoji:'👑'},
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+function defaultHabitState() {
+  return {
+    habits: [
+      {id:'h1',name:'Devoirs',emoji:'📚',color:'#6e57ff',xp:15},
+      {id:'h2',name:'Business',emoji:'💼',color:'#ffd166',xp:20},
+      {id:'h3',name:'Sport',emoji:'⚽',color:'#ff4f7b',xp:20},
+      {id:'h4',name:'Apprendre',emoji:'🧠',color:'#4fc3ff',xp:15},
+      {id:'h5',name:'Méditation',emoji:'🧘',color:'#00f5c4',xp:10},
+    ],
+    history:{},xp:0,perfectDays:0,unlockedBadges:[],
+    notifs:{daily:true,weekly:true,streak:false},
+    selectedColor:COLORS[0],editingHabit:null,lastRecapKey:null,
+  };
+}
+function defaultBizState() {
+  return {
+    transactions:[],products:[],campaigns:[],metrics:[],tasks:[],goals:[],
+    links:[
+      {id:'l1',name:'Shopify Admin',url:'https://purrlopets.myshopify.com/admin',icon:'🛒',cat:'E-commerce'},
+      {id:'l2',name:'Mega.nz Formation',url:'https://mega.nz/folder/FQg2lSaS#rYlByvveQyHOpaXHvHDITg',icon:'🎓',cat:'Formation'},
+      {id:'l3',name:'Meta Ads',url:'https://business.facebook.com',icon:'📘',cat:'Publicité'},
+      {id:'l4',name:'TikTok Ads',url:'https://ads.tiktok.com',icon:'🎵',cat:'Publicité'},
+      {id:'l5',name:'Gmail',url:'https://mail.google.com',icon:'📧',cat:'Communication'},
+    ],
+    resources:[],formationActions:[],formationHours:0,formationNotes:'',strategyNotes:'',editingProductId:null,
+  };
+}
+
+let hState, bState;
+try {
+  const hs = JSON.parse(localStorage.getItem('gabos_habits')||'null');
+  hState = hs ? {...defaultHabitState(),...hs} : defaultHabitState();
+} catch { hState = defaultHabitState(); }
+try {
+  const bs = JSON.parse(localStorage.getItem('gabos_biz')||'null');
+  bState = bs ? {...defaultBizState(),...bs} : defaultBizState();
+} catch { bState = defaultBizState(); }
+
+function saveH() { localStorage.setItem('gabos_habits',JSON.stringify(hState)); }
+function saveB() { localStorage.setItem('gabos_biz',JSON.stringify(bState)); }
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function keyForDate(d) { return d.toISOString().slice(0,10); }
+function fmtDate(d) { return new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
+function daysLeft() { return Math.ceil((new Date('2026-12-01')-new Date())/(1000*60*60*24)); }
+function todayData() { const k=todayKey(); if(!hState.history[k])hState.history[k]={}; return hState.history[k]; }
+function getLast(n) {
+  const days=[];
+  for(let i=n-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(keyForDate(d));}
+  return days;
+}
+function dateShort(ds) { const d=new Date(ds+'T12:00:00'); return ['Di','Lu','Ma','Me','Je','Ve','Sa'][d.getDay()]; }
+function formatDateFull(ds) { const d=new Date(ds+'T00:00:00'); return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}); }
+
+// ═══════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  const ni=document.getElementById('nav-'+name);if(ni)ni.classList.add('active');
+  closeSidebar();
+  if(name==='today'){renderToday();}
+  if(name==='stats'){renderStats();}
+  if(name==='objectives'){renderObjectives();}
+  if(name==='rewards'){renderRewards();}
+  if(name==='manage'){renderManage();renderColorPicker();}
+  if(name==='command'){renderCommand();}
+  if(name==='finance'){renderFinance('month');}
+  if(name==='products'){renderProducts();}
+  if(name==='ads'){renderAds();}
+  if(name==='analytics'){renderAnalytics();}
+  if(name==='tasks'){renderTasks();}
+  if(name==='strategy'){renderStrategy();}
+  if(name==='hub'){renderHub();}
+  if(name==='knowledge'){renderKnowledge();}
+}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('show')}
+
+// MODALS
+function openModal(id){document.getElementById(id).classList.add('open');document.querySelectorAll('#'+id+' input[type="date"]').forEach(i=>{if(!i.value)i.value=todayKey()});}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// TOAST
+function toast(msg,color){const t=document.getElementById('toast');t.textContent=msg;t.style.borderColor=color||'var(--accent)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);}
+function showToast(msg){toast(msg);}
+function showBurst(em){const b=document.getElementById('burst');b.textContent=em;b.classList.remove('show');void b.offsetWidth;b.classList.add('show');setTimeout(()=>b.classList.remove('show'),700);}
+
+// ═══════════════════════════════════════════════
+//  HABIT CALCULATIONS
+// ═══════════════════════════════════════════════
+function completionPct(dayKey){const h=hState.history[dayKey]||{};const total=hState.habits.length;if(!total)return 0;return Math.round((hState.habits.filter(hb=>h[hb.id]).length/total)*100);}
+function avgPct(days){const vals=days.map(d=>completionPct(d));return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);}
+function calcStreak(){let streak=0,d=new Date();while(streak<365){const k=keyForDate(d);if(completionPct(k)>=50)streak++;else break;d.setDate(d.getDate()-1);}return streak;}
+function habitStreak(hid){let streak=0,d=new Date();d.setDate(d.getDate()-1);while(streak<365){const k=keyForDate(d);if(hState.history[k]&&hState.history[k][hid])streak++;else break;d.setDate(d.getDate()-1);}return streak;}
+function levelInfo(){const xp=hState.xp||0;let lv=0;for(let i=0;i<LEVELS.length;i++){if(xp>=LEVELS[i].min)lv=i;}const cur=LEVELS[lv],next=LEVELS[lv+1],xpIn=xp-cur.min,xpNeed=next?next.min-cur.min:500,progress=Math.min(100,Math.round((xpIn/xpNeed)*100));return{num:lv+1,name:cur.name,emoji:cur.emoji,progress,xpIn,xpNeed};}
+
+function updateXP(){
+  const lv=levelInfo(),streak=calcStreak();
+  document.getElementById('s-level-badge').textContent=`${lv.emoji} Niveau ${lv.num} — ${lv.name}`;
+  document.getElementById('s-xp-val').textContent=`${lv.xpIn} / ${lv.xpNeed} XP`;
+  document.getElementById('s-xp-bar').style.width=lv.progress+'%';
+  document.getElementById('s-streak').textContent=`🔥 ${streak} jours`;
+}
+function addXP(amount){const oldLv=levelInfo().num;hState.xp=(hState.xp||0)+amount;if(levelInfo().num>oldLv)showToast(`🏆 NIVEAU ${levelInfo().num} ! ${levelInfo().emoji} ${levelInfo().name}`);updateXP();}
+function checkBadges(){
+  const streak=calcStreak(),lv=levelInfo().num;
+  BADGES.forEach(b=>{
+    if((hState.unlockedBadges||[]).includes(b.id))return;
+    let unlock=false;
+    if(b.req.streak&&streak>=b.req.streak)unlock=true;
+    if(b.req.perfect&&(hState.perfectDays||0)>=b.req.perfect)unlock=true;
+    if(b.req.perfectDays&&(hState.perfectDays||0)>=b.req.perfectDays)unlock=true;
+    if(b.req.level&&lv>=b.req.level)unlock=true;
+    if(b.req.habitsCount&&hState.habits.length>=b.req.habitsCount)unlock=true;
+    if(unlock){hState.unlockedBadges=[...(hState.unlockedBadges||[]),b.id];setTimeout(()=>showToast(`★ Badge débloqué : ${b.icon} ${b.name} !`),800);}
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER TODAY
+// ═══════════════════════════════════════════════
+function renderToday(){
+  const td=todayData(),total=hState.habits.length,doneArr=hState.habits.filter(h=>td[h.id]),pct=total?Math.round((doneArr.length/total)*100):0;
+  const now=new Date(),hour=now.getHours();
+  document.getElementById('today-title').textContent=(hour<12?'Bonjour':'Bonsoir')+' Gab 👋';
+  document.getElementById('today-date').textContent=formatDateFull(todayKey());
+  const circ=2*Math.PI*54;
+  document.getElementById('ring-circle').style.strokeDashoffset=circ-(pct/100)*circ;
+  document.getElementById('ring-pct').textContent=pct+'%';
+  document.getElementById('done-count').textContent=doneArr.length;
+  document.getElementById('remain-count').textContent=total-doneArr.length;
+  const xpEarned=doneArr.reduce((s,h)=>s+(h.xp||10),0)+(doneArr.length===total&&total>0?25:0);
+  document.getElementById('today-xp-total').textContent=xpEarned;
+  const msgs=[['Lance-toi !','Commence par une petite habitude.'],['Bel effort !','Tu es lancé, continue !'],['Plus de la moitié !','Tu es à mi-chemin !'],['Presque là !','Un dernier effort !'],['Journée parfaite ! 🎉','100% cochés. Tu es une machine !']];
+  const mi=pct===100?4:pct>=75?3:pct>=50?2:pct>=25?1:0;
+  document.getElementById('ring-msg').textContent=msgs[mi][0];
+  document.getElementById('ring-submsg').textContent=msgs[mi][1];
+  const list=document.getElementById('habits-list');list.innerHTML='';
+  if(!hState.habits.length){list.innerHTML='<div class="empty-state">Aucune habitude. Va dans "Gérer habitudes" pour en ajouter !</div>';return;}
+  hState.habits.forEach(h=>{
+    const done=!!td[h.id],hs=habitStreak(h.id),card=document.createElement('div');
+    card.className='habit-card'+(done?' done':'');
+    card.style.setProperty('--habit-color',h.color||'#6e57ff');
+    card.innerHTML=`<div class="habit-emoji">${h.emoji||'⭐'}</div><div class="habit-info"><div class="habit-name">${h.name}</div><div class="habit-streak-text"><span style="color:var(--gold)">${hs}🔥</span> jours de suite</div></div><div class="habit-xp">+${h.xp||10} XP</div><div class="habit-actions"><button class="btn-icon" onclick="editHabitQuick('${h.id}',event)">✎</button><button class="btn-icon" onclick="removeHabit('${h.id}',event)" style="color:var(--red)">✕</button></div><div class="habit-check">${done?'✓':''}</div>`;
+    card.addEventListener('click',e=>{if(!e.target.closest('.habit-actions'))toggleHabit(h.id,card);});
+    list.appendChild(card);
+  });
+  const zone=document.getElementById('today-insight');
+  if(pct===100)zone.innerHTML=`<div class="insight-card ok-card"><div class="i-head"><span class="i-icon">🎉</span><div><div class="i-title">Journée parfaite !</div></div></div><div class="i-body">Tu as tout complété aujourd'hui. Continue !</div></div>`;
+  else if(pct>=50)zone.innerHTML=`<div class="insight-card"><div class="i-head"><span class="i-icon">👍</span><div><div class="i-title">Bonne avancée</div></div></div><div class="i-body">Plus que <strong>${total-doneArr.length}</strong> habitude(s) restante(s).</div></div>`;
+  else zone.innerHTML='';
+  updateXP();checkBadges();
+}
+
+function toggleHabit(hid,card){
+  const td=todayData(),wasDone=!!td[hid],habit=hState.habits.find(h=>h.id===hid);
+  td[hid]=!wasDone;
+  if(!wasDone){
+    addXP(habit.xp||10);showBurst(habit.emoji||'⭐');showToast(`+${habit.xp||10} XP — ${habit.name} ✓`);
+    const allDone=hState.habits.every(h=>td[h.id]);
+    if(allDone&&hState.habits.length>0){hState.perfectDays=(hState.perfectDays||0)+1;hState.xp=(hState.xp||0)+25;setTimeout(()=>{showBurst('🏆');showToast('🌟 Journée parfaite ! +25 XP bonus');},750);}
+  }else{hState.xp=Math.max(0,(hState.xp||0)-(habit.xp||10));showToast(`${habit.name} retiré`);}
+  saveH();checkBadges();renderToday();
+}
+
+// ═══════════════════════════════════════════════
+//  HABIT MANAGEMENT
+// ═══════════════════════════════════════════════
+let selColor=COLORS[0],selEmoji=EMOJIS[0];
+function renderColorPicker(){
+  const cp=document.getElementById('color-picker');if(!cp)return;
+  cp.innerHTML=COLORS.map(c=>`<div class="color-dot${c===selColor?' sel':''}" style="background:${c}" onclick="selectColor('${c}','color-picker')"></div>`).join('');
+}
+function selectColor(c,pickerId){selColor=c;document.querySelectorAll('#'+pickerId+' .color-dot').forEach(d=>{d.classList.toggle('sel',d.style.background===c||d.style.backgroundColor===c);});}
+function openAddModal(){hState.editingHabit=null;document.getElementById('modal-title').textContent='Nouvelle habitude';document.getElementById('modal-name').value='';document.getElementById('modal-xp').value=10;renderEmojiGrid();renderModalColorPicker();document.getElementById('habitModal').classList.add('open');}
+function closeHabitModal(){document.getElementById('habitModal').classList.remove('open');}
+function renderEmojiGrid(){const eg=document.getElementById('emoji-grid');eg.innerHTML=EMOJIS.map(e=>`<button class="emoji-btn${e===selEmoji?' sel':''}" onclick="selectEmoji('${e}')">${e}</button>`).join('');}
+function selectEmoji(e){selEmoji=e;renderEmojiGrid();}
+function renderModalColorPicker(){const mcp=document.getElementById('modal-color-picker');mcp.innerHTML=COLORS.map(c=>`<div class="color-dot${c===selColor?' sel':''}" style="background:${c}" onclick="selectColor('${c}','modal-color-picker')"></div>`).join('');}
+function saveHabit(){
+  const name=document.getElementById('modal-name').value.trim();if(!name){showToast('Donne un nom !');return;}
+  const xp=parseInt(document.getElementById('modal-xp').value)||10;
+  if(hState.editingHabit){const h=hState.habits.find(x=>x.id===hState.editingHabit);if(h){h.name=name;h.emoji=selEmoji;h.color=selColor;h.xp=xp;}}
+  else hState.habits.push({id:'h'+Date.now(),name,emoji:selEmoji,color:selColor,xp});
+  saveH();closeHabitModal();renderToday();renderManage&&renderManage();showToast('Habitude enregistrée ✓');
+}
+function editHabitQuick(id,e){e.stopPropagation();const h=hState.habits.find(x=>x.id===id);if(!h)return;hState.editingHabit=id;selEmoji=h.emoji||EMOJIS[0];selColor=h.color||COLORS[0];document.getElementById('modal-title').textContent='Modifier l\'habitude';document.getElementById('modal-name').value=h.name;document.getElementById('modal-xp').value=h.xp||10;renderEmojiGrid();renderModalColorPicker();document.getElementById('habitModal').classList.add('open');}
+function removeHabit(id,e){e.stopPropagation();hState.habits=hState.habits.filter(h=>h.id!==id);saveH();renderToday();renderManage&&renderManage();}
+function quickAddHabit(){const name=document.getElementById('quick-name').value.trim();if(!name)return;hState.habits.push({id:'h'+Date.now(),name,emoji:'⭐',color:selColor,xp:10});document.getElementById('quick-name').value='';saveH();renderToday();renderManage();showToast('Habitude ajoutée !');}
+function renderManage(){
+  const ml=document.getElementById('manage-list');if(!ml)return;
+  ml.innerHTML=hState.habits.map(h=>`<div class="habit-manage-item"><div class="hm-emoji">${h.emoji||'⭐'}</div><div class="hm-name">${h.name}</div><div style="font-size:11px;color:var(--gold);margin-right:8px">+${h.xp||10}XP</div><div class="hm-btns"><button class="hm-btn" onclick="editHabitQuick2('${h.id}')">✎</button><button class="hm-btn" style="color:var(--red)" onclick="removeHabit('${h.id}',event)">✕</button></div></div>`).join('')||'<div class="empty-state">Aucune habitude</div>';
+}
+function editHabitQuick2(id){const h=hState.habits.find(x=>x.id===id);if(!h)return;hState.editingHabit=id;selEmoji=h.emoji||EMOJIS[0];selColor=h.color||COLORS[0];document.getElementById('modal-title').textContent='Modifier l\'habitude';document.getElementById('modal-name').value=h.name;document.getElementById('modal-xp').value=h.xp||10;renderEmojiGrid();renderModalColorPicker();document.getElementById('habitModal').classList.add('open');}
+function toggleNotif(key,el){el.classList.toggle('on');hState.notifs[key]=el.classList.contains('on');saveH();if(hState.notifs[key]&&key==='daily'&&'Notification' in window){Notification.requestPermission().then(p=>showToast(p==='granted'?'Notifications activées ✅':'Notifications refusées'));}}
+function confirmReset(){if(confirm('Réinitialiser toutes les données habitudes ?')){localStorage.removeItem('gabos_habits');hState=defaultHabitState();saveH();renderToday();renderManage();updateXP();showToast('Données réinitialisées');}}
+
+// ═══════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════
+let statRange='week',ch1,ch2;
+function setStatRange(r,el){statRange=r;document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderStats();}
+function renderStats(){
+  const days=getLast(statRange==='week'?7:30),wa=avgPct(days),streak=calcStreak(),lv=levelInfo();
+  document.getElementById('stats-kpis').innerHTML=`<div class="stat-card"><div class="s-val" style="color:var(--accent)">${wa}%</div><div class="s-lbl">Moy. ${statRange==='week'?'7j':'30j'}</div></div><div class="stat-card"><div class="s-val" style="color:var(--gold)">${streak}</div><div class="s-lbl">Streak 🔥</div></div><div class="stat-card"><div class="s-val" style="color:var(--accent3)">${hState.xp||0}</div><div class="s-lbl">XP Total</div></div><div class="stat-card"><div class="s-val" style="color:var(--accent2)">${hState.perfectDays||0}</div><div class="s-lbl">Jours parfaits</div></div>`;
+  const pcts=days.map(d=>completionPct(d)),labels=days.map(dateShort);
+  if(ch1)ch1.destroy();
+  ch1=new Chart(document.getElementById('chart-daily'),{type:'bar',data:{labels,datasets:[{data:pcts,backgroundColor:pcts.map(p=>p>=80?'rgba(0,245,196,.7)':p>=50?'rgba(110,87,255,.7)':'rgba(255,79,123,.7)'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8080a8',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#8080a8',font:{size:10}}}}}});
+  const xpHistory=days.map((_,i)=>{let x=0;days.slice(0,i+1).forEach(d=>{const h2=hState.history[d]||{};hState.habits.forEach(h=>{if(h2[h.id])x+=h.xp||10;});});return x;});
+  if(ch2)ch2.destroy();
+  ch2=new Chart(document.getElementById('chart-xp'),{type:'line',data:{labels,datasets:[{data:xpHistory,borderColor:'var(--accent)',backgroundColor:'rgba(110,87,255,.1)',tension:.4,fill:true,pointBackgroundColor:'var(--accent)',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8080a8',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#8080a8',font:{size:10}}}}}});
+  const week7=getLast(7);
+  document.getElementById('mini-bars').innerHTML=hState.habits.map(h=>{const d=week7.filter(day=>hState.history[day]&&hState.history[day][h.id]).length;const pct=Math.round(d/7*100);return`<div class="mini-bar-row"><div class="mini-bar-label">${h.emoji||''} ${h.name}</div><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${pct}%;background:${h.color||'var(--accent)'}"></div></div><div class="mini-bar-pct">${pct}%</div></div>`;}).join('');
+  const ic=document.getElementById('insight-cards');ic.innerHTML='';
+  if(wa>=80){ic.innerHTML+=`<div class="insight-card ok-card"><div class="i-head"><span class="i-icon">🚀</span><div><div class="i-title">Excellent momentum !</div></div></div><div class="i-body">Tu complètes ${wa}% de tes habitudes. Continue sur cette lancée !</div></div>`;}
+  else if(wa<50){ic.innerHTML+=`<div class="insight-card warn-card"><div class="i-head"><span class="i-icon">⚠️</span><div><div class="i-title">Régularité à améliorer</div></div></div><div class="i-body">Beaucoup de jours incomplets. Fixe-toi 3 habitudes piliers non-négociables.</div></div>`;}
+  const ng=document.getElementById('next-goal-text');
+  if(wa>=90)ng.textContent='Maintiens ton score (90%+). Essaie de ne pas manquer plus d\'1 habitude/jour.';
+  else if(wa>=70)ng.textContent=`Passe de ${wa}% à ${Math.min(wa+10,100)}%. Focus sur tes habitudes les plus importantes.`;
+  else ng.textContent='Objectif : 70% minimum. Choisis 3 habitudes piliers et ne les rate jamais.';
+}
+
+// ═══════════════════════════════════════════════
+//  OBJECTIVES (HABITS)
+// ═══════════════════════════════════════════════
+function renderObjectives(){
+  const streak=calcStreak(),lv=levelInfo(),wa7=avgPct(getLast(7)),wa30=avgPct(getLast(30));
+  document.getElementById('objectives-content').innerHTML=`
+    <div class="obj-card"><div class="obj-card-title">📊 Analyse de tes habitudes</div><div class="obj-list">
+      <div class="obj-item"><div class="obj-dot" style="background:var(--accent)"></div><div class="obj-text"><strong>Complétion 7j : ${wa7}%</strong><span>${wa7>=80?'🔥 Excellent rythme !':wa7>=50?'👍 Bon, mais peut mieux faire':'⚠️ Augmente ta régularité'}</span></div></div>
+      <div class="obj-item"><div class="obj-dot" style="background:var(--gold)"></div><div class="obj-text"><strong>Streak actuel : ${streak} jours</strong><span>${streak>=7?'💎 Streak impressionnant !':streak>=3?'En bonne voie !':'Construis un streak de 7 jours'}</span></div></div>
+      <div class="obj-item"><div class="obj-dot" style="background:var(--accent3)"></div><div class="obj-text"><strong>Niveau ${lv.num} — ${lv.emoji} ${lv.name}</strong><span>${lv.xpNeed-lv.xpIn} XP avant le prochain niveau</span></div></div>
+    </div></div>
+    <div class="obj-card"><div class="obj-card-title">🎯 Progression sur 30j</div>
+      <div style="font-size:.9rem;color:var(--text2);margin-bottom:12px">Complétion moyenne : <strong style="color:var(--text)">${wa30}%</strong></div>
+      <div class="prog-bg" style="height:10px"><div class="prog-fill" style="width:${wa30}%;background:${wa30>=80?'var(--accent3)':wa30>=50?'var(--accent)':'var(--accent2)'}"></div></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  REWARDS
+// ═══════════════════════════════════════════════
+function renderRewards(){
+  const streak=calcStreak(),lv=levelInfo();
+  document.getElementById('rewards-stats').innerHTML=`<div class="stat-card"><div class="s-val" style="color:var(--accent)">${hState.xp||0}</div><div class="s-lbl">XP Total</div></div><div class="stat-card"><div class="s-val" style="color:var(--gold)">${lv.num}</div><div class="s-lbl">Niveau</div></div><div class="stat-card"><div class="s-val" style="color:var(--accent3)">${(hState.unlockedBadges||[]).length}/${BADGES.length}</div><div class="s-lbl">Badges</div></div><div class="stat-card"><div class="s-val" style="color:var(--accent2)">${hState.perfectDays||0}</div><div class="s-lbl">Jours parfaits</div></div>`;
+  document.getElementById('rewards-grid').innerHTML=BADGES.map(b=>{const u=(hState.unlockedBadges||[]).includes(b.id);return`<div class="reward-card ${u?'unlocked':'locked'}"><div class="reward-icon">${b.icon}</div><div class="reward-name">${b.name}</div><div class="reward-cond">${b.cond}</div>${u?`<div class="reward-unlocked-tag">DÉBLOQUÉ ✓</div>`:''}</div>`;}).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  RECAP
+// ═══════════════════════════════════════════════
+function showRecap(){
+  const wa=avgPct(getLast(7)),streak=calcStreak(),lv=levelInfo(),days7=getLast(7);
+  const habitStats=hState.habits.map(h=>{const done=days7.filter(d=>hState.history[d]&&hState.history[d][h.id]).length;return{h,done,pct:Math.round((done/7)*100)};});
+  const best=[...habitStats].sort((a,b)=>b.pct-a.pct)[0],worst=[...habitStats].sort((a,b)=>a.pct-b.pct)[0];
+  const grade=wa>=90?'S':wa>=75?'A':wa>=60?'B':wa>=40?'C':'D';
+  document.getElementById('recap-badge').textContent=`Grade ${grade}`;
+  let html=`📊 <strong>Complétion : ${wa}%</strong><br>🔥 <strong>Streak : ${streak} jours</strong><br>⚡ <strong>Niveau ${lv.num} — ${lv.emoji} ${lv.name}</strong><br>💎 <strong>XP : ${hState.xp||0}</strong><div class="recap-section"><h4>Par habitude</h4>`;
+  habitStats.forEach(({h,done,pct})=>{const bar='█'.repeat(Math.round(done/7*10))+'░'.repeat(10-Math.round(done/7*10));html+=`<div style="margin-bottom:8px"><strong>${h.emoji||''} ${h.name}</strong> — ${done}/7 (${pct}%)<br><span style="font-family:monospace;font-size:12px;color:var(--text3)">${bar}</span></div>`;});
+  html+=`</div>`;
+  if(best)html+=`<div class="recap-section"><strong>💪 Point fort :</strong> ${best.h.emoji} ${best.h.name} (${best.pct}%)</div>`;
+  document.getElementById('recap-content').innerHTML=html;
+  document.getElementById('recapModal').classList.add('open');
+}
+function closeRecap(){document.getElementById('recapModal').classList.remove('open');}
+
+// ═══════════════════════════════════════════════
+//  BUSINESS: COMMAND CENTER
+// ═══════════════════════════════════════════════
+function updateClock(){const n=new Date();document.getElementById('cmd-clock').textContent=n.toLocaleTimeString('fr-FR');document.getElementById('clock-today').textContent=n.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+setInterval(updateClock,1000);
+
+function renderCommand(){
+  const h=new Date().getHours();
+  document.getElementById('cmd-greeting').textContent=(h<12?'Bonjour':'Bonsoir')+', Gab 👋';
+  document.getElementById('cmd-date').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('goal-days-left').textContent=daysLeft()+' jours restants';
+  updateClock();
+  const totalRev=bState.transactions.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
+  const totalExp=bState.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const profit=totalRev-totalExp;
+  const streak=calcStreak();
+  document.getElementById('cmd-kpis').innerHTML=`
+    <div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">CA Total</div><div class="kpi-value" style="color:var(--accent3)">${totalRev.toFixed(0)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:${profit>=0?'var(--green)':'var(--red)'}"><div class="kpi-label">Profit</div><div class="kpi-value" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}${profit.toFixed(0)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">Streak Habitudes</div><div class="kpi-value" style="color:var(--gold)">${streak}🔥</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Jours restants</div><div class="kpi-value" style="color:var(--accent)">${daysLeft()}</div></div>`;
+  document.getElementById('cmd-tasks').innerHTML=bState.tasks.filter(t=>!t.done&&t.priority==='high').slice(0,5).map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem;display:flex;align-items:center;gap:8px"><input type="checkbox" onchange="toggleTask('${t.id}')" style="accent-color:var(--accent);cursor:pointer"><span>${t.title}</span></div>`).join('')||'<div class="empty" style="padding:20px"><p>Pas de tâches haute priorité</p></div>';
+  document.getElementById('cmd-products').innerHTML=bState.products.filter(p=>p.status!=='dead').slice(0,5).map(p=>{const sc={testing:'var(--gold)',scaling:'var(--green)',paused:'var(--text2)'};return`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem;display:flex;justify-content:space-between;align-items:center"><span>${p.name}</span><span class="tag" style="background:${sc[p.status]||'var(--accent)'}22;color:${sc[p.status]||'var(--accent)'};border:1px solid ${sc[p.status]||'var(--accent)'}44">${p.status}</span></div>`;}).join('')||'<div class="empty" style="padding:20px"><p>Aucun produit actif</p></div>';
+  document.getElementById('goal-days-left-sidebar').textContent=daysLeft()+' jours restants';
+}
+
+// ═══════════════════════════════════════════════
+//  BUSINESS: FINANCE
+// ═══════════════════════════════════════════════
+let chF,chP;
+function renderFinance(period){
+  const txs=period==='month'?bState.transactions.filter(t=>{const d=new Date(t.date||t.id.replace('tx',''));return(new Date()-d)<30*86400000;}):bState.transactions;
+  const totalRev=txs.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
+  const totalExp=txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const profit=totalRev-totalExp;
+  const allRev=bState.transactions.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
+  const dailyTarget=4000,progress=Math.min(100,(allRev/dailyTarget)*100);
+  document.getElementById('finance-kpis').innerHTML=`
+    <div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">Revenus</div><div class="kpi-value" style="color:var(--accent3)">${totalRev.toFixed(0)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--red)"><div class="kpi-label">Dépenses</div><div class="kpi-value" style="color:var(--red)">${totalExp.toFixed(0)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:${profit>=0?'var(--green)':'var(--red)'}"><div class="kpi-label">Profit net</div><div class="kpi-value" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}${profit.toFixed(0)}€</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Vers objectif</div><div class="kpi-value" style="color:var(--accent)">${progress.toFixed(1)}%</div></div>`;
+  const last7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().slice(0,10);});
+  const revData=last7.map(k=>bState.transactions.filter(t=>t.type==='revenue'&&(t.date===k||t.id.includes(k.replace(/-/g,'')))).reduce((s,t)=>s+t.amount,0));
+  const expData=last7.map(k=>bState.transactions.filter(t=>t.type==='expense'&&(t.date===k||t.id.includes(k.replace(/-/g,'')))).reduce((s,t)=>s+t.amount,0));
+  if(chF)chF.destroy();
+  chF=new Chart(document.getElementById('chart-finance'),{type:'bar',data:{labels:last7.map(dateShort),datasets:[{label:'Revenus',data:revData,backgroundColor:'rgba(0,245,196,.6)',borderRadius:6},{label:'Dépenses',data:expData,backgroundColor:'rgba(255,79,79,.5)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8080a8',font:{size:11}}}},scales:{y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#8080a8'}},x:{grid:{display:false},ticks:{color:'#8080a8'}}}}});
+  const cats={};txs.filter(t=>t.type==='expense').forEach(t=>{cats[t.cat||'Autre']=(cats[t.cat||'Autre']||0)+t.amount;});
+  if(chP)chP.destroy();
+  const ckeys=Object.keys(cats);
+  if(ckeys.length){chP=new Chart(document.getElementById('chart-pie'),{type:'doughnut',data:{labels:ckeys,datasets:[{data:ckeys.map(k=>cats[k]),backgroundColor:['rgba(110,87,255,.8)','rgba(255,79,123,.8)','rgba(0,245,196,.8)','rgba(255,209,102,.8)','rgba(79,195,255,.8)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8080a8',font:{size:11}}}}}});}
+  const sorted=bState.transactions.slice().sort((a,b)=>b.id>a.id?1:-1).slice(0,15);
+  document.getElementById('transactions-table').innerHTML=sorted.length?`<table class="data-table"><thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th>Montant</th></tr></thead><tbody>${sorted.map(t=>`<tr><td class="mono" style="font-size:.75rem">${fmtDate(t.date||'2026-01-01')}</td><td>${t.desc}</td><td><span class="tag ${t.type==='revenue'?'tag-green':'tag-red'}">${t.cat||'—'}</span></td><td class="mono" style="font-weight:700;color:${t.type==='revenue'?'var(--accent3)':'var(--red)'}">${t.type==='revenue'?'+':'-'}${t.amount}€</td></tr>`).join('')}</tbody></table>`:'<div class="empty"><div class="ei">💰</div><p>Ajoute ta première transaction</p></div>';
+}
+function addTransaction(){const desc=document.getElementById('t-desc').value.trim();if(!desc){toast('Donne une description','var(--red)');return;}bState.transactions.push({id:'tx'+Date.now(),type:document.getElementById('t-type').value,desc,amount:parseFloat(document.getElementById('t-amount').value)||0,cat:document.getElementById('t-cat').value,date:document.getElementById('t-date').value||todayKey()});saveB();closeModal('modal-add-transaction');renderFinance('month');toast('Transaction ajoutée ✓');}
+
+// ═══════════════════════════════════════════════
+//  BUSINESS: PRODUCTS
+// ═══════════════════════════════════════════════
+function renderProducts(){
+  const pl=document.getElementById('products-list');
+  if(!bState.products.length){pl.innerHTML='<div class="empty"><div class="ei">🧪</div><p>Ajoute ton premier produit testé</p></div>';return;}
+  const sc={testing:'var(--gold)',scaling:'var(--green)',dead:'var(--red)',paused:'var(--text2)'};
+  pl.innerHTML=`<div class="grid-3">${bState.products.map(p=>{const margin=p.price>0?((p.price-p.cost)/p.price*100).toFixed(0):0;return`<div class="card" style="border-color:${sc[p.status]||'var(--border)'}33"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem">${p.name}</div><div style="display:flex;gap:6px"><span class="tag" style="background:${sc[p.status]}22;color:${sc[p.status]};border:1px solid ${sc[p.status]}44">${p.status}</span><button onclick="editProduct('${p.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✎</button><button onclick="delProduct('${p.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:.78rem;margin-bottom:12px"><div><div style="color:var(--text2)">Prix vente</div><div class="mono" style="font-weight:700">${p.price||0}€</div></div><div><div style="color:var(--text2)">Coût</div><div class="mono" style="font-weight:700;color:var(--red)">${p.cost||0}€</div></div><div><div style="color:var(--text2)">Marge</div><div class="mono" style="font-weight:700;color:var(--accent3)">${margin}%</div></div></div>${p.notes?`<div style="font-size:.78rem;color:var(--text2);padding-top:10px;border-top:1px solid var(--border)">${p.notes}</div>`:''}</div>`;}).join('')}</div>`;
+}
+function saveProduct(){const name=document.getElementById('p-name').value.trim();if(!name){toast('Donne un nom','var(--red)');return;}const editId=bState.editingProductId;if(editId){const p=bState.products.find(x=>x.id===editId);if(p){p.name=name;p.status=document.getElementById('p-status').value;p.price=parseFloat(document.getElementById('p-price').value)||0;p.cost=parseFloat(document.getElementById('p-cost').value)||0;p.adbudget=parseFloat(document.getElementById('p-adbudget').value)||0;p.notes=document.getElementById('p-notes').value;}bState.editingProductId=null;}else bState.products.push({id:'p'+Date.now(),name,status:document.getElementById('p-status').value,price:parseFloat(document.getElementById('p-price').value)||0,cost:parseFloat(document.getElementById('p-cost').value)||0,adbudget:parseFloat(document.getElementById('p-adbudget').value)||0,notes:document.getElementById('p-notes').value});saveB();closeModal('modal-add-product');renderProducts();toast('Produit enregistré ✓');}
+function editProduct(id){const p=bState.products.find(x=>x.id===id);if(!p)return;bState.editingProductId=id;document.getElementById('modal-product-title').textContent='Modifier le produit';['p-name','p-status','p-price','p-cost','p-adbudget','p-notes'].forEach((fid,i)=>{const el=document.getElementById(fid);if(el)el.value=[p.name,p.status,p.price,p.cost,p.adbudget,p.notes||''][i]||'';});openModal('modal-add-product');}
+function delProduct(id){bState.products=bState.products.filter(p=>p.id!==id);saveB();renderProducts();}
+
+// ═══════════════════════════════════════════════
+//  BUSINESS: ADS
+// ═══════════════════════════════════════════════
+function renderAds(){
+  const cs=bState.campaigns,totalBudget=cs.reduce((s,c)=>s+c.budget,0),totalRev=cs.reduce((s,c)=>s+c.revenue,0);
+  const roas=totalBudget>0?(totalRev/totalBudget).toFixed(2):'—',avgCtr=cs.length?(cs.reduce((s,c)=>s+c.ctr,0)/cs.length).toFixed(2):'—';
+  document.getElementById('ads-kpis').innerHTML=`<div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Campagnes actives</div><div class="kpi-value" style="color:var(--accent)">${cs.filter(c=>c.status==='active').length}</div></div><div class="kpi-card" style="--kpi-color:var(--red)"><div class="kpi-label">Budget total/j</div><div class="kpi-value" style="color:var(--red)">${totalBudget}€</div></div><div class="kpi-card" style="--kpi-color:${roas==='—'?'var(--text2)':parseFloat(roas)>=2?'var(--green)':'var(--red)'}"><div class="kpi-label">ROAS</div><div class="kpi-value" style="color:${roas==='—'?'var(--text2)':parseFloat(roas)>=2?'var(--green)':'var(--red)'}">${roas}</div></div><div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">CTR moyen</div><div class="kpi-value" style="color:var(--gold)">${avgCtr}%</div></div>`;
+  const sc={active:'var(--green)',paused:'var(--gold)',dead:'var(--red)'};
+  document.getElementById('campaigns-list').innerHTML=cs.length?cs.map(c=>{const roi=c.budget>0?((c.revenue-c.budget)/c.budget*100).toFixed(0):'—';return`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div><div style="font-weight:700;font-size:.9rem">${c.name}</div><div style="font-size:.75rem;color:var(--text2)">${c.platform}</div></div><div style="display:flex;gap:6px;align-items:center"><span class="tag" style="background:${sc[c.status]}22;color:${sc[c.status]};border:1px solid ${sc[c.status]}44">${c.status}</span><button onclick="delCamp('${c.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:.78rem"><div><div style="color:var(--text2)">Budget/j</div><div class="mono" style="font-weight:700">${c.budget}€</div></div><div><div style="color:var(--text2)">Revenus</div><div class="mono" style="font-weight:700;color:var(--accent3)">${c.revenue}€</div></div><div><div style="color:var(--text2)">CTR</div><div class="mono" style="font-weight:700">${c.ctr}%</div></div><div><div style="color:var(--text2)">ROI</div><div class="mono" style="font-weight:700;color:${roi==='—'?'var(--text2)':parseFloat(roi)>=0?'var(--green)':'var(--red)'}">${roi}${roi!=='—'?'%':''}</div></div></div></div>`;}).join(''):'';
+  document.getElementById('campaigns-empty').style.display=cs.length?'none':'block';
+  const sug=[];
+  if(roas!=='—'&&parseFloat(roas)<2)sug.push({t:'danger',m:'🔴 ROAS < 2 — campagnes non rentables. Coupe les moins performantes.'});
+  if(roas!=='—'&&parseFloat(roas)>=3)sug.push({t:'success',m:'✅ ROAS > 3 — augmente progressivement le budget des meilleures campagnes.'});
+  if(avgCtr!=='—'&&parseFloat(avgCtr)<1)sug.push({t:'warn',m:"⚠️ CTR < 1% — tes créatifs n'accrochent pas. Teste de nouveaux visuels."});
+  if(!sug.length)sug.push({t:'info',m:'💡 Ajoute tes campagnes pour recevoir des suggestions.'});
+  document.getElementById('ads-suggestions').innerHTML=sug.map(s=>`<div class="alert alert-${s.t}">${s.m}</div>`).join('');
+}
+function addCampaign(){const name=document.getElementById('c-name').value.trim();if(!name){toast('Donne un nom','var(--red)');return;}bState.campaigns.push({id:'c'+Date.now(),name,platform:document.getElementById('c-platform').value,budget:parseFloat(document.getElementById('c-budget').value)||0,revenue:parseFloat(document.getElementById('c-revenue').value)||0,ctr:parseFloat(document.getElementById('c-ctr').value)||0,status:document.getElementById('c-status').value});saveB();closeModal('modal-add-campaign');renderAds();toast('Campagne ajoutée ✓');}
+function delCamp(id){bState.campaigns=bState.campaigns.filter(c=>c.id!==id);saveB();renderAds();}
+
+// ═══════════════════════════════════════════════
+//  BUSINESS: ANALYTICS
+// ═══════════════════════════════════════════════
+function saveMetric(){const date=document.getElementById('m-date').value||todayKey();const existing=bState.metrics.findIndex(m=>m.date===date);const metric={date,visitors:parseInt(document.getElementById('m-visitors').value)||0,orders:parseInt(document.getElementById('m-orders').value)||0,revenue:parseFloat(document.getElementById('m-revenue').value)||0,adspend:parseFloat(document.getElementById('m-adspend').value)||0};if(existing>=0)bState.metrics[existing]=metric;else bState.metrics.push(metric);saveB();closeModal('modal-add-metric');renderAnalytics();toast('Métriques enregistrées ✓');}
+function renderAnalytics(){
+  const tm=bState.metrics.find(m=>m.date===todayKey())||{visitors:0,orders:0,revenue:0,adspend:0};
+  const conv=tm.visitors>0?((tm.orders/tm.visitors)*100).toFixed(2):'—',aov=tm.orders>0?(tm.revenue/tm.orders).toFixed(0):'—',roas=tm.adspend>0?(tm.revenue/tm.adspend).toFixed(2):'—';
+  document.getElementById('analytics-kpis').innerHTML=`<div class="kpi-card" style="--kpi-color:var(--blue)"><div class="kpi-label">Visiteurs</div><div class="kpi-value" style="color:var(--blue)">${tm.visitors}</div></div><div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">Commandes</div><div class="kpi-value" style="color:var(--accent3)">${tm.orders}</div></div><div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">Conversion</div><div class="kpi-value" style="color:var(--gold)">${conv}%</div></div><div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-label">Panier moyen</div><div class="kpi-value" style="color:var(--accent)">${aov}${aov!=='—'?'€':''}</div></div>`;
+  const cart=Math.round(tm.visitors*.15),checkout=Math.round(cart*.4);
+  document.getElementById('funnel').innerHTML=[{l:'Visiteurs',v:tm.visitors,c:'var(--blue)',p:100},{l:'Ajout panier',v:cart,c:'var(--accent)',p:tm.visitors>0?(cart/tm.visitors*100):0},{l:'Checkout',v:checkout,c:'var(--gold)',p:tm.visitors>0?(checkout/tm.visitors*100):0},{l:'Commandes',v:tm.orders,c:'var(--accent3)',p:tm.visitors>0?(tm.orders/tm.visitors*100):0}].map(s=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px"><span style="color:var(--text2)">${s.l}</span><span style="font-weight:700;color:${s.c}">${s.v} (${s.p.toFixed(1)}%)</span></div><div class="prog-bg"><div class="prog-fill" style="width:${s.p}%;background:${s.c}"></div></div></div>`).join('');
+  const last7=bState.metrics.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,7);
+  document.getElementById('metrics-history').innerHTML=last7.length?`<table class="data-table"><thead><tr><th>Date</th><th>Vis.</th><th>Cmd</th><th>CA</th><th>ROAS</th></tr></thead><tbody>${last7.map(m=>{const r=m.adspend>0?(m.revenue/m.adspend).toFixed(1):'—';return`<tr><td class="mono" style="font-size:.75rem">${fmtDate(m.date)}</td><td>${m.visitors}</td><td>${m.orders}</td><td style="color:var(--accent3)">${m.revenue}€</td><td style="color:${r==='—'?'var(--text2)':parseFloat(r)>=2?'var(--green)':'var(--red)'}">${r}</td></tr>`;}).join('')}</tbody></table>`:'<div class="empty"><div class="ei">📊</div><p>Ajoute tes métriques quotidiennes</p></div>';
+}
+
+// ═══════════════════════════════════════════════
+//  BUSINESS: TASKS
+// ═══════════════════════════════════════════════
+const TEMPLATES=[
+  {name:'🚀 Lancer un produit',tasks:['Trouver le produit sur AliExpress/CJ','Créer la page produit Shopify','Configurer les prix & marges','Créer le créatif publicitaire','Lancer campagne test 5-10€/j','Analyser les résultats à J+3']},
+  {name:'📣 Tester une créa',tasks:['Définir l\'angle marketing','Créer le visuel/vidéo','Dupliquer l\'adset existant','Lancer à 5€/j','Analyser CTR à 24h']},
+  {name:'📈 Optimiser campagne',tasks:['Analyser ROAS par adset','Couper les adsets perdants','Scale les adsets rentables x1.5','Tester nouveau public','Vérifier le pixel Shopify']},
+];
+function renderTasks(){
+  const high=bState.tasks.filter(t=>t.priority==='high'),med=bState.tasks.filter(t=>t.priority==='med'),low=bState.tasks.filter(t=>t.priority==='low'||t.done);
+  document.getElementById('count-high').textContent=high.filter(t=>!t.done).length;
+  document.getElementById('count-med').textContent=med.filter(t=>!t.done).length;
+  document.getElementById('count-low').textContent=low.length;
+  ['high','med','low'].forEach(p=>{const list=p==='low'?low:bState.tasks.filter(t=>t.priority===p);document.getElementById('tasks-'+p).innerHTML=list.length?list.map(t=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);${t.done?'opacity:.5':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')" style="margin-top:3px;accent-color:var(--accent);cursor:pointer"><div style="flex:1"><div style="font-size:.85rem;font-weight:500;${t.done?'text-decoration:line-through':''}">${t.title}</div><div style="font-size:.72rem;color:var(--text2)">${t.cat||''}${t.deadline?' · ⏰ '+fmtDate(t.deadline):''}</div></div><button onclick="delTask('${t.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem">✕</button></div>`).join(''):'<div class="empty" style="padding:20px"><p>Aucune tâche</p></div>';});
+  document.getElementById('templates-list').innerHTML=TEMPLATES.map((tpl,i)=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px"><div style="font-weight:700;margin-bottom:4px">${tpl.name}</div><div style="font-size:.8rem;color:var(--text2);margin-bottom:10px">${tpl.tasks.length} tâches</div><button class="btn btn-primary btn-sm" onclick="applyTemplate(${i})">Appliquer</button></div>`).join('');
+}
+function addTask(){const title=document.getElementById('task-title').value.trim();if(!title){toast('Écris une tâche','var(--red)');return;}bState.tasks.push({id:'t'+Date.now(),title,priority:document.getElementById('task-priority').value,deadline:document.getElementById('task-deadline').value||null,cat:document.getElementById('task-cat').value,done:false});saveB();closeModal('modal-add-task');document.getElementById('task-title').value='';renderTasks();toast('Tâche ajoutée ✓');}
+function toggleTask(id){const t=bState.tasks.find(x=>x.id===id);if(t)t.done=!t.done;saveB();renderTasks();}
+function delTask(id){bState.tasks=bState.tasks.filter(t=>t.id!==id);saveB();renderTasks();}
+function applyTemplate(idx){const tpl=TEMPLATES[idx];tpl.tasks.forEach(title=>bState.tasks.push({id:'t'+Date.now()+Math.random(),title,priority:'high',deadline:null,cat:'Business',done:false}));saveB();closeModal('modal-template');renderTasks();toast(`Template "${tpl.name}" appliqué ✓`);}
+
+// ═══════════════════════════════════════════════
+//  BUSINESS: STRATEGY
+// ═══════════════════════════════════════════════
+function renderStrategy(){
+  document.getElementById('strategy-notes').value=bState.strategyNotes||'';
+  document.getElementById('goals-list').innerHTML=bState.goals.length?bState.goals.map(g=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)"><div><div style="font-weight:600;font-size:.88rem">${g.title}</div>${g.deadline?`<div style="font-size:.72rem;color:var(--text2);margin-top:2px">⏰ ${fmtDate(g.deadline)}</div>`:''}</div><div style="display:flex;gap:6px;align-items:center"><span class="tag tag-purple">${g.horizon}</span><button onclick="delGoal('${g.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div></div>`).join(''):'<div class="empty"><div class="ei">🎯</div><p>Définis tes objectifs</p></div>';
+  const months=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'],now=new Date();
+  document.getElementById('roadmap').innerHTML=`<div style="font-size:.8rem;color:var(--text2);margin-bottom:12px">Mars 2026 → Décembre 2026 · Objectif : 4 000€/jour</div><div style="display:flex;gap:4px;flex-wrap:wrap">${Array.from({length:10},(_,i)=>{const m=(now.getMonth()+i)%12,isCur=i===0;return`<div style="flex:1;min-width:50px;background:${isCur?'var(--accent)22':'var(--surface2)'};border:1px solid ${isCur?'var(--accent)44':'var(--border)'};border-radius:8px;padding:8px 4px;text-align:center"><div style="font-size:.72rem;font-weight:700;color:${isCur?'var(--accent)':'var(--text2)'}">${months[m]}</div></div>`;}).join('')}</div><div style="font-size:.72rem;color:var(--text3);margin-top:10px;text-align:center">9 mois · ${daysLeft()} jours restants</div>`;
+}
+function addGoal(){const title=document.getElementById('goal-title').value.trim();if(!title){toast('Écris un objectif','var(--red)');return;}bState.goals.push({id:'g'+Date.now(),title,deadline:document.getElementById('goal-deadline').value||null,horizon:document.getElementById('goal-horizon').value});saveB();closeModal('modal-add-goal');renderStrategy();toast('Objectif ajouté ✓');}
+function delGoal(id){bState.goals=bState.goals.filter(g=>g.id!==id);saveB();renderStrategy();}
+function saveStrategyNotes(){bState.strategyNotes=document.getElementById('strategy-notes').value;saveB();}
+
+// ═══════════════════════════════════════════════
+//  HUB
+// ═══════════════════════════════════════════════
+function renderHub(){
+  const cats={};bState.links.forEach(l=>{if(!cats[l.cat])cats[l.cat]=[];cats[l.cat].push(l);});
+  document.getElementById('hub-categories').innerHTML=Object.entries(cats).map(([cat,links])=>`<div style="margin-bottom:24px"><div class="section-title">${cat}</div><div class="grid-auto">${links.map(l=>`<div onclick="window.open('${l.url}','_blank')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='none'"><div style="font-size:1.6rem;margin-bottom:8px">${l.icon||'🔗'}</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:4px">${l.name}</div><div style="font-size:.7rem;color:var(--text3);word-break:break-all">${l.url.replace(/^https?:\/\//,'').split('/')[0]}</div><button onclick="event.stopPropagation();delLink('${l.id}')" style="display:block;margin-top:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:.75rem">Supprimer</button></div>`).join('')}</div></div>`).join('')||'<div class="empty"><div class="ei">🔗</div><p>Ajoute des liens</p></div>';
+}
+function addLink(){const name=document.getElementById('l-name').value.trim();let url=document.getElementById('l-url').value.trim();if(!name||!url){toast('Remplis le nom et l\'URL','var(--red)');return;}if(!url.startsWith('http'))url='https://'+url;bState.links.push({id:'l'+Date.now(),name,url,icon:document.getElementById('l-icon').value.trim()||'🔗',cat:document.getElementById('l-cat').value});saveB();closeModal('modal-add-link');renderHub();toast('Lien ajouté ✓');}
+function delLink(id){bState.links=bState.links.filter(l=>l.id!==id);saveB();renderHub();}
+
+// ═══════════════════════════════════════════════
+//  KNOWLEDGE
+// ═══════════════════════════════════════════════
+function renderKnowledge(){
+  const h=bState.formationHours||0;
+  document.getElementById('formation-hours').value=h;
+  document.getElementById('formation-bar').style.width=(h/80*100)+'%';
+  document.getElementById('formation-pct').textContent=(h/80*100).toFixed(0)+'%';
+  document.getElementById('formation-remaining').textContent=(80-h)+'h restantes';
+  document.getElementById('formation-notes').value=bState.formationNotes||'';
+  const list=document.getElementById('resources-list'),empty=document.getElementById('resources-empty');
+  if(!bState.resources.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=bState.resources.map(r=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start"><div style="font-size:1.2rem">${r.type==='Vidéo'?'🎬':r.type==='Article'?'📄':r.type==='Formation'?'🎓':'📦'}</div><div style="flex:1"><div style="font-weight:600;font-size:.85rem">${r.title}</div>${r.notes?`<div style="font-size:.75rem;color:var(--text2);margin-top:2px">${r.notes}</div>`:''} ${r.url?`<a href="${r.url}" target="_blank" style="font-size:.72rem;color:var(--accent)">Ouvrir →</a>`:''}</div><button onclick="delResource('${r.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>`).join('');
+  document.getElementById('formation-actions').innerHTML=bState.formationActions.length?bState.formationActions.map(a=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><input type="checkbox" ${a.done?'checked':''} onchange="toggleFA('${a.id}')" style="accent-color:var(--accent);cursor:pointer"><span style="flex:1;font-size:.85rem;${a.done?'text-decoration:line-through;opacity:.5':''}">${a.text}</span><button onclick="delFA('${a.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer">✕</button></div>`).join(''):'';
+}
+function updateFormationProgress(){const h=parseInt(document.getElementById('formation-hours').value)||0;bState.formationHours=h;document.getElementById('formation-bar').style.width=(h/80*100)+'%';document.getElementById('formation-pct').textContent=(h/80*100).toFixed(0)+'%';document.getElementById('formation-remaining').textContent=(80-h)+'h restantes';saveB();}
+function saveFormationNotes(){bState.formationNotes=document.getElementById('formation-notes').value;saveB();}
+function addResource(){const title=document.getElementById('r-title').value.trim();if(!title){toast('Donne un titre','var(--red)');return;}bState.resources.push({id:'r'+Date.now(),title,url:document.getElementById('r-url').value.trim(),type:document.getElementById('r-type').value,notes:document.getElementById('r-notes').value.trim()});saveB();closeModal('modal-add-resource');renderKnowledge();toast('Ressource ajoutée ✓');}
+function delResource(id){bState.resources=bState.resources.filter(r=>r.id!==id);saveB();renderKnowledge();}
+function addFormationAction(){const text=document.getElementById('new-formation-action').value.trim();if(!text)return;bState.formationActions.push({id:'fa'+Date.now(),text,done:false});document.getElementById('new-formation-action').value='';saveB();renderKnowledge();}
+function toggleFA(id){const a=bState.formationActions.find(x=>x.id===id);if(a)a.done=!a.done;saveB();renderKnowledge();}
+function delFA(id){bState.formationActions=bState.formationActions.filter(a=>a.id!==id);saveB();renderKnowledge();}
+
+// ═══════════════════════════════════════════════
+//  AI COACH
+// ═══════════════════════════════════════════════
+function saveApiKey(){const key=document.getElementById('api-key-input').value.trim();if(!key)return;localStorage.setItem('gabos_apikey',key);closeModal('modal-api-key');toast('Clé API enregistrée ✓','var(--green)');}
+function getApiKey(){return localStorage.getItem('gabos_apikey');}
+function coachQuick(type){const p={analyse:'Analyse mon business en détail.',today:'Que dois-je absolument faire aujourd\'hui ?',product:'Comment valider un produit avant de mettre trop de budget pub ?',motivation:'J\'ai besoin d\'un boost. Dis-moi pourquoi je vais y arriver.'};document.getElementById('coach-input').value=p[type];sendCoach();}
+async function sendCoach(){
+  const input=document.getElementById('coach-input'),msg=input.value.trim();if(!msg)return;input.value='';
+  const apiKey=getApiKey();if(!apiKey){openModal('modal-api-key');return;}
+  const mode=document.getElementById('coach-mode').value;
+  const modes={normal:'Sois direct et concret.',strict:'Sois très exigeant, pousse à l\'action immédiate.',soft:'Sois encourageant et bienveillant.'};
+  const streak=calcStreak(),lv=levelInfo();
+  const totalRev=bState.transactions.filter(t=>t.type==='revenue').reduce((s,t)=>s+t.amount,0);
+  const totalExp=bState.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const sys=`Tu es l'AI Business Coach de Gab, 100% dédié à son succès.\n\nCONTEXTE:\n- Boutique: purrlopets.com (dropshipping)\n- Objectif: 4 000€/jour en décembre 2026 (${daysLeft()} jours restants)\n- Lycéen, entrepreneur autodidacte\n- CA total: ${totalRev.toFixed(0)}€ | Profit: ${(totalRev-totalExp).toFixed(0)}€\n- Habitudes: Streak ${streak} jours, Niveau ${lv.num} ${lv.emoji}\n- Formation: ${bState.formationHours||0}/80h\n\nMODE: ${modes[mode]}\n\nRéponds en français, avec des actions concrètes. Utilise des emojis. Sois bref.`;
+  const box=document.getElementById('coach-messages');
+  box.innerHTML+=`<div class="ai-label user" style="margin-top:16px">TOI</div><div class="ai-message user">${msg}</div>`;
+  const tid='ty'+Date.now();
+  box.innerHTML+=`<div id="${tid}"><div class="ai-label coach">COACH</div><div class="ai-message"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
+  document.getElementById('coach-box').scrollTop=99999;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:msg}]})});
+    const d=await r.json(),reply=d.content?.[0]?.text||'Erreur.';
+    document.getElementById(tid).innerHTML=`<div class="ai-label coach">COACH</div><div class="ai-message">${reply.replace(/\n/g,'<br>')}</div>`;
+  }catch{document.getElementById(tid).innerHTML=`<div class="ai-label coach">COACH</div><div class="ai-message" style="color:var(--red)">Erreur — vérifie ta clé API.</div>`;}
+  document.getElementById('coach-box').scrollTop=99999;
+}
+function clearCoach(){document.getElementById('coach-messages').innerHTML='<div class="ai-label coach">GAB OS COACH</div><div class="ai-message">Conversation effacée. Prêt à travailler, Gab 💪</div>';}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+renderToday();
+updateClock();
+renderColorPicker();
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.style.opacity==='1'&&bg.classList.remove('open');}));
+</script>
+</body>
+</html>
